@@ -2,6 +2,7 @@
 //! Nur Gerüst: Tokens, Thema, Schriften, Texte, Tastenkürzel, Grundbausteine, Backend-Brücke.
 pub mod fonts;
 pub mod i18n;
+pub mod keys;
 #[cfg(test)]
 mod lint;
 pub mod theme;
