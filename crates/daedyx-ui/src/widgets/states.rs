@@ -6,8 +6,8 @@ use crate::fonts;
 use crate::theme::{Look, look_ui};
 use crate::tokens::TOKENS;
 use eframe::egui::{
-    Align, Color32, FontId, Layout, RichText, Sense, Stroke, Ui, UiBuilder, accesskit::Role, pos2,
-    vec2,
+    Align, Color32, FontId, Label, Layout, RichText, Sense, Stroke, Ui, UiBuilder, accesskit::Role,
+    pos2, vec2,
 };
 
 const CIRCLE: f32 = 48.0;
@@ -46,8 +46,9 @@ fn heading_and_text(ui: &mut Ui, look: &Look, title: &str, text: &str) {
         fonts::semibold_in(ui.ctx()),
     );
     ui.label(RichText::new(title).font(font).color(look.p.text));
-    ui.set_max_width(TEXT_WIDTH);
-    ui.label(RichText::new(text).color(look.p.text_muted));
+    let width = ui.available_width().min(TEXT_WIDTH);
+    ui.set_max_width(width);
+    ui.add(Label::new(RichText::new(text).color(look.p.text_muted)).wrap());
     ui.add_space(f32::from(TOKENS.spacing.s2));
 }
 

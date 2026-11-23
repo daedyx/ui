@@ -6,6 +6,7 @@ pub mod i18n;
 pub mod keys;
 #[cfg(test)]
 mod lint;
+pub mod screenshot;
 pub mod theme;
 pub mod tokens;
 pub mod widgets;
