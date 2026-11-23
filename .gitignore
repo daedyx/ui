@@ -1,0 +1,5 @@
+/target
+# CLAUDE.md bleibt lokal (SICHERHEIT 3.2: nie im Git)
+CLAUDE.md
+*.png
+!docs/bilder/*.png

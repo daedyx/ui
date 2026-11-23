@@ -1,0 +1,11 @@
+# Sicherheitsrahmen (SICHERHEIT.md, Anhang B). Ändern nur mit Björns Ja.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+disallowed-methods = [
+  { path = "std::process::Command::new", reason = "Prozesse nur über daedyx-sys (SICHERHEIT 2.7)" },
+  { path = "std::net::TcpStream::connect", reason = "Netz nur über daedyx-net (2.6)" },
+  { path = "std::env::temp_dir", reason = "Temp nur im eigenen Datenordner (2.8)" },
+  { path = "std::sync::Mutex::lock", reason = "keine Mutex-Sperren im Gerüst; Kanäle benutzen (2.2)" },
+]

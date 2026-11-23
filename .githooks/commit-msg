@@ -1,0 +1,3 @@
+#!/bin/sh
+# Commit-Texte: gleiche Prüfung wie Dateien (Co-Authored-By von Anthropic ist erlaubt).
+grep -v -i -E '^Co-Authored-By: Claude .*<noreply@anthropic\.com>$' "$1" | sh "$(dirname "$0")/scan.sh" "Commit-Text"

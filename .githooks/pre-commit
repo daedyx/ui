@@ -1,0 +1,25 @@
+#!/bin/sh
+# Lokaler Wächter vor jedem Commit (SICHERHEIT 6.2). Nie mit --no-verify umgehen.
+dir="$(dirname "$0")"
+fail=0
+for f in $(git diff --cached --name-only --diff-filter=ACMR); do
+  case "$f" in
+    CLAUDE.md|*/CLAUDE.md) echo "  $f: CLAUDE.md gehört nicht ins Git"; fail=1; continue ;;
+    *.db|*.sqlite|*.eml|*.msg|*.mbox|*.pst|*.ics|*.vcf|*.pem|*.key|*.p12|*.pfx|.env|*.env)
+      echo "  $f: verbotene Dateiart"; fail=1; continue ;;
+    .githooks/scan.sh|scripts/scan-selbsttest.sh) continue ;;
+  esac
+  size="$(git cat-file -s ":$f")"
+  if [ "$size" -gt 1048576 ]; then echo "  $f: größer als 1 MB"; fail=1; continue; fi
+  git show ":$f" | sh "$dir/scan.sh" "$f" || fail=1
+done
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --redact --no-banner || fail=1
+else
+  echo "  Hinweis: gitleaks nicht installiert, Geheimnis-Muster nur über scan.sh geprüft"
+fi
+if [ -f Cargo.toml ] && command -v cargo >/dev/null 2>&1; then
+  cargo fmt --all --check >/dev/null 2>&1 || { echo "  cargo fmt: Formatierung abweichend (cargo fmt --all)"; fail=1; }
+fi
+if [ $fail -ne 0 ]; then echo "Commit gestoppt: bitte die Fundstellen beheben."; exit 1; fi
+exit 0
