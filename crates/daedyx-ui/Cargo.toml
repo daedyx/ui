@@ -9,6 +9,10 @@ license.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Prüftests (feste Texte, Farbwerte, Schlüssel) für andere Crates; nur als Entwicklungs-Abhängigkeit.
+lint = []
+
 [dependencies]
 eframe.workspace = true
 serde.workspace = true

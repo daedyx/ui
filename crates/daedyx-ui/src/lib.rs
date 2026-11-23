@@ -4,8 +4,8 @@ pub mod bridge;
 pub mod fonts;
 pub mod i18n;
 pub mod keys;
-#[cfg(test)]
-mod lint;
+#[cfg(any(test, feature = "lint"))]
+pub mod lint;
 pub mod screenshot;
 pub mod theme;
 pub mod tokens;

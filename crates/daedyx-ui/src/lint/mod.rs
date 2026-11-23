@@ -1,4 +1,5 @@
-//! Prüftests über den eigenen Quelltext (nur in Tests übersetzt):
+//! Prüftests über Quelltexte (nur in Tests übersetzt; andere Crates nutzen sie über das Merkmal
+//! `lint` als Entwicklungs-Abhängigkeit):
 //! 1. jeder im Code benutzte Textschlüssel steht in `de.json`,
 //! 2. keine festen Oberflächentexte im Code (alles über i18n),
 //! 3. keine Farbwerte außerhalb der Token-Datei.
@@ -15,14 +16,21 @@ const FILE_ENDINGS: &[&str] = &[".json", ".rs", ".png", ".ttf", ".ttc", ".toml",
 /// Quelltexte aller Crates im Workspace, ohne Testdateien und ohne diesen Prüfordner.
 pub fn source_files() -> Vec<PathBuf> {
     let crates = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-    let mut out = Vec::new();
-    let mut stack: Vec<PathBuf> = std::fs::read_dir(&crates)
+    let dirs: Vec<PathBuf> = std::fs::read_dir(&crates)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
                 .map(|e| e.path().join("src"))
                 .collect()
         })
         .unwrap_or_default();
+    rust_files(&dirs)
+}
+
+/// Alle `.rs`-Dateien unter `dirs`, ohne Testdateien (`tests.rs`, `*_tests.rs`, Ordner `tests`)
+/// und ohne Ordner `lint`.
+pub fn rust_files(dirs: &[PathBuf]) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let mut stack: Vec<PathBuf> = dirs.to_vec();
     while let Some(dir) = stack.pop() {
         let Ok(entries) = std::fs::read_dir(&dir) else {
             continue;
@@ -148,17 +156,26 @@ pub fn color_values(name: &str, src: &str) -> Vec<String> {
 
 /// Alle drei Regeln über den ganzen Workspace.
 pub fn check_workspace() -> Vec<String> {
-    let texts = Texts::for_language(Language::De);
+    check_files(
+        &source_files(),
+        &Texts::for_language(Language::De),
+        &["tokens/generated.rs"],
+    )
+}
+
+/// Alle drei Regeln über `files`. Schlüssel müssen in `texts` stehen; Dateien, deren Pfad auf einen
+/// Eintrag in `color_exempt` endet, dürfen Farbwerte enthalten (erzeugte Tokens, Farben aus Mails).
+pub fn check_files(files: &[PathBuf], texts: &Texts, color_exempt: &[&str]) -> Vec<String> {
     let mut out = Vec::new();
-    for path in source_files() {
-        let Ok(src) = std::fs::read_to_string(&path) else {
+    for path in files {
+        let Ok(src) = std::fs::read_to_string(path) else {
             continue;
         };
         let name = path.to_string_lossy().replace('\\', "/");
         let short = name.split("/crates/").last().unwrap_or(&name).to_string();
-        out.extend(missing_keys(&short, &src, &texts));
+        out.extend(missing_keys(&short, &src, texts));
         out.extend(fixed_texts(&short, &src));
-        if !short.ends_with("tokens/generated.rs") {
+        if !color_exempt.iter().any(|e| short.ends_with(e)) {
             out.extend(color_values(&short, &src));
         }
     }
