@@ -80,7 +80,7 @@ fn stichproben_kommen_an() {
     assert_eq!(dark.overlay.a(), 0x99);
     assert_eq!(light.calendar[4], Color32::from_rgb(0xA3, 0x18, 0x5E));
     assert_eq!(TOKENS.size.control, 32.0);
-    assert_eq!(TOKENS.radius.large, 12.0);
+    assert_eq!(TOKENS.radius.large, 12);
     assert_eq!(TOKENS.font.steps.text_bold.weight, 600);
     assert_eq!(TOKENS.shadow.dialog.dark.blur, 48);
 }

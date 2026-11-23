@@ -39,34 +39,34 @@ pub struct TypeStep {
 #[serde(deny_unknown_fields)]
 pub struct Spacing {
     #[serde(rename = "1")]
-    pub s1: f32,
+    pub s1: u8,
     #[serde(rename = "2")]
-    pub s2: f32,
+    pub s2: u8,
     #[serde(rename = "3")]
-    pub s3: f32,
+    pub s3: u8,
     #[serde(rename = "4")]
-    pub s4: f32,
+    pub s4: u8,
     #[serde(rename = "5")]
-    pub s5: f32,
+    pub s5: u8,
     #[serde(rename = "6")]
-    pub s6: f32,
+    pub s6: u8,
     #[serde(rename = "8")]
-    pub s8: f32,
+    pub s8: u8,
     #[serde(rename = "10")]
-    pub s10: f32,
+    pub s10: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Radius {
     #[serde(rename = "klein")]
-    pub small: f32,
+    pub small: u16,
     #[serde(rename = "mittel")]
-    pub medium: f32,
+    pub medium: u16,
     #[serde(rename = "gross")]
-    pub large: f32,
+    pub large: u16,
     #[serde(rename = "rund")]
-    pub round: f32,
+    pub round: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
