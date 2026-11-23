@@ -18,9 +18,9 @@ hit "Mac-/Linux-Benutzerpfad" '/(Users|home)/[a-z][a-z0-9_-]+/'
 hit "Laufwerkspfad" '(^|[[:space:]"(=`'"'"'])[A-Za-z]:[\][A-Za-z0-9_]'
 hit "Netzwerkpfad (NAS)" '[\][\][A-Za-z0-9_-]+[\]'
 hit "private IP-Adresse" '(^|[^0-9.])(10\.[0-9]+\.[0-9]+\.[0-9]+|192\.168\.[0-9]+\.[0-9]+|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+)'
-# Mailadressen nur aus reservierten Testbereichen
+# Mailadressen nur aus reservierten Testbereichen (RFC 2606/6761: example.*, .test, .invalid, .example)
 mails="$(grep -o -E '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' "$tmp" \
-  | grep -v -i -E '@([a-z0-9-]+\.)*(example\.(com|org|net)|[a-z0-9-]+\.test|[a-z0-9-]+\.invalid|users\.noreply\.github\.com)$' | head -1)"
+  | grep -v -i -E '@([a-z0-9-]+\.)*(example\.(com|org|net)|[a-z0-9-]+\.test|[a-z0-9-]+\.invalid|[a-z0-9-]+\.example|users\.noreply\.github\.com)$' | head -1)"
 if [ -n "$mails" ]; then echo "  $name: Mailadresse außerhalb example.com/.test/.invalid"; fail=1; fi
 # Lokale Wortliste (echte Namen usw.), liegt nie im Repo
 wl="${APPDATA:-}/Daedyx/verboten.txt"

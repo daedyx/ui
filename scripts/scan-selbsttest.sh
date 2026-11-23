@@ -9,6 +9,7 @@ expect() { # expect <0|1> <beschreibung> <text>
 at="@"; bs='\'
 expect 0 "sauberer Text" "Hallo anna.beispiel${at}example.com, Server 192.0.2.10"
 expect 0 "Testdomain .test" "ben${at}post.test"
+expect 0 "Phishing-Beispiel .example" "sicherheit${at}bank.example"
 expect 0 "noreply github" "x${at}users.noreply.github.com"
 expect 1 "fremde Mailadresse" "jemand${at}firma.de"
 expect 1 "privater Schlüssel" "-----BEGIN RSA PRIV""ATE KEY-----"
