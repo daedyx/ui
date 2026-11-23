@@ -7,3 +7,4 @@ pub mod keys;
 mod lint;
 pub mod theme;
 pub mod tokens;
+pub mod widgets;
