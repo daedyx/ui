@@ -6,6 +6,7 @@
 //! `DAEDYX_DIALOG=1` (Dialog offen), `DAEDYX_SCREENSHOT=datei.png` (nur das Fenster, dann Ende).
 mod app;
 mod controls;
+mod demo;
 mod sections;
 
 use daedyx_ui::i18n::Texts;

@@ -1,6 +1,7 @@
 //! Die Abschnitte der Galerie, je einer pro Baustein-Gruppe.
 use crate::app::Galerie;
-use daedyx_ui::keys::{self, Action, SHORTCUTS};
+use crate::demo;
+use daedyx_ui::keys::{self, Action};
 use daedyx_ui::theme::look_ui;
 use daedyx_ui::tokens::TOKENS;
 use daedyx_ui::widgets::{
@@ -162,32 +163,6 @@ fn states(ui: &mut Ui, g: &Galerie) {
     });
 }
 
-fn bridge(ui: &mut Ui, g: &mut Galerie) {
-    ui.horizontal(|ui| {
-        if button(ui, ButtonKind::Primary, &g.texts.t("bruecke.fragen")).clicked() {
-            g.waiting = g.bridge.as_ref().is_some_and(|b| b.send(7).is_ok());
-        }
-        let status = match (g.bridge.is_some(), g.waiting, g.answer) {
-            (false, _, _) => g.texts.t("bruecke.getrennt"),
-            (true, true, _) => g.texts.t("bruecke.wartet"),
-            (true, false, Some(n)) => g.texts.tf("bruecke.antwort", &[("wert", &n.to_string())]),
-            (true, false, None) => String::new(),
-        };
-        ui.label(status);
-    });
-}
-
-fn shortcuts(ui: &mut Ui, g: &Galerie) {
-    let mac = cfg!(target_os = "macos");
-    let faint = look_ui(ui).p.text_faint;
-    for s in SHORTCUTS {
-        ui.horizontal(|ui| {
-            ui.label(g.texts.t(s.label_key));
-            ui.label(RichText::new(keys::label(&g.texts, s, mac)).color(faint));
-        });
-    }
-}
-
 pub fn all(ui: &mut Ui, g: &mut Galerie) {
     ui.columns(2, |cols| {
         if let [left, right] = cols {
@@ -200,8 +175,12 @@ pub fn all(ui: &mut Ui, g: &mut Galerie) {
                 dialog_and_menu(ui, g)
             });
             section(right, &g.texts.t("bereich.zustaende"), |ui| states(ui, g));
-            section(right, &g.texts.t("bereich.bruecke"), |ui| bridge(ui, g));
-            section(right, &g.texts.t("kuerzel.tabelle"), |ui| shortcuts(ui, g));
+            section(right, &g.texts.t("bereich.bruecke"), |ui| {
+                demo::bridge(ui, g)
+            });
+            section(right, &g.texts.t("kuerzel.tabelle"), |ui| {
+                demo::shortcuts(ui, g)
+            });
         }
     });
 }
