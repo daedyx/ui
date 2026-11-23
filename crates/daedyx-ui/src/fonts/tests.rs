@@ -28,3 +28,15 @@ fn mac_schrift_wird_genommen_wenn_segoe_fehlt() {
     assert!(d.font_data.contains_key("system-regular"));
     assert!(!d.font_data.contains_key("system-semibold"));
 }
+
+#[test]
+fn ohne_geladene_schriften_faellt_halbfett_auf_normal_zurueck() {
+    let ctx = eframe::egui::Context::default();
+    let mut out = ctx.run_ui(Default::default(), |_| {});
+    out.textures_delta.clear();
+    assert_eq!(super::semibold_in(&ctx), FontFamily::Proportional);
+    ctx.set_fonts(definitions(|_| None));
+    let mut out = ctx.run_ui(Default::default(), |_| {});
+    out.textures_delta.clear();
+    assert_eq!(super::semibold_in(&ctx), semibold());
+}

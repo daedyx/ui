@@ -42,7 +42,7 @@ fn paint_row(ui: &Ui, rect: Rect, row: &ListRow<'_>, selected: bool, resp: &Resp
     let pad = f32::from(TOKENS.spacing.s4);
     let steps = &TOKENS.font.steps;
     let family = if row.unread {
-        fonts::semibold()
+        fonts::semibold_in(ui.ctx())
     } else {
         eframe::egui::FontFamily::Proportional
     };

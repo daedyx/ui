@@ -29,7 +29,7 @@ pub fn badge(ui: &mut Ui, tone: BadgeTone, text: &str) -> Response {
         BadgeTone::Error => (s.error.text, s.error.soft),
         BadgeTone::Info => (s.info.text, s.info.soft),
     };
-    let font = FontId::new(TOKENS.font.steps.small.size, fonts::semibold());
+    let font = FontId::new(TOKENS.font.steps.small.size, fonts::semibold_in(ui.ctx()));
     let galley = ui.painter().layout_no_wrap(text.to_owned(), font, fg);
     let pad = f32::from(TOKENS.spacing.s2);
     let size = vec2((galley.size().x + 2.0 * pad).max(HEIGHT), HEIGHT);

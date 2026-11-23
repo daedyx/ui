@@ -46,7 +46,10 @@ pub fn confirm_dialog(ctx: &Context, d: &ConfirmDialog<'_>) -> Option<DialogAnsw
             name_container(ui, Role::Dialog, d.title);
             ui.set_max_width(MAX_WIDTH);
             let look = look_ui(ui);
-            let title_font = FontId::new(TOKENS.font.steps.emphasis.size, fonts::semibold());
+            let title_font = FontId::new(
+                TOKENS.font.steps.emphasis.size,
+                fonts::semibold_in(ui.ctx()),
+            );
             ui.label(RichText::new(d.title).font(title_font).color(look.p.text));
             ui.label(RichText::new(d.text).color(look.p.text_muted));
             ui.add_space(f32::from(TOKENS.spacing.s4));

@@ -41,7 +41,10 @@ fn circle(ui: &mut Ui, look: &Look, error: bool) {
 }
 
 fn heading_and_text(ui: &mut Ui, look: &Look, title: &str, text: &str) {
-    let font = FontId::new(TOKENS.font.steps.emphasis.size, fonts::semibold());
+    let font = FontId::new(
+        TOKENS.font.steps.emphasis.size,
+        fonts::semibold_in(ui.ctx()),
+    );
     ui.label(RichText::new(title).font(font).color(look.p.text));
     ui.set_max_width(TEXT_WIDTH);
     ui.label(RichText::new(text).color(look.p.text_muted));

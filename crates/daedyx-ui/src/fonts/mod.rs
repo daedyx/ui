@@ -21,6 +21,17 @@ pub fn semibold() -> FontFamily {
     FontFamily::Name(SEMIBOLD.into())
 }
 
+/// Halbfett, wenn diese Schriften im `ctx` geladen sind, sonst normal. So stürzt ein Baustein
+/// nicht ab, wenn eine App `theme::install` vergessen hat (egui bricht bei fehlender Familie ab).
+pub fn semibold_in(ctx: &Context) -> FontFamily {
+    let bold = semibold();
+    if ctx.fonts(|f| f.definitions().families.contains_key(&bold)) {
+        bold
+    } else {
+        FontFamily::Proportional
+    }
+}
+
 /// Schriftordner des Systems. Unter Windows aus `WINDIR`, nicht fest verdrahtet.
 pub fn system_font_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();

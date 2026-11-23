@@ -41,7 +41,10 @@ pub fn button_enabled(ui: &mut Ui, kind: ButtonKind, text: &str, enabled: bool) 
     let look = look_ui(ui);
     let (fg, fill, stroke) = colors(kind, &look);
     let alpha = if enabled { 1.0 } else { DISABLED_ALPHA };
-    let font = FontId::new(TOKENS.font.steps.text_bold.size, fonts::semibold());
+    let font = FontId::new(
+        TOKENS.font.steps.text_bold.size,
+        fonts::semibold_in(ui.ctx()),
+    );
     let galley = ui
         .painter()
         .layout_no_wrap(text.to_owned(), font, fg.gamma_multiply(alpha));

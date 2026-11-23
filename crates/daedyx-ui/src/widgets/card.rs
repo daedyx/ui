@@ -19,7 +19,10 @@ pub fn card(ui: &mut Ui, title: &str, body: &str, selected: bool) -> Response {
         .inner_margin(Margin::same(pad))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            let title_font = FontId::new(TOKENS.font.steps.text_bold.size, fonts::semibold());
+            let title_font = FontId::new(
+                TOKENS.font.steps.text_bold.size,
+                fonts::semibold_in(ui.ctx()),
+            );
             ui.label(RichText::new(title).font(title_font).color(look.p.text));
             ui.label(RichText::new(body).color(look.p.text_muted));
         });
