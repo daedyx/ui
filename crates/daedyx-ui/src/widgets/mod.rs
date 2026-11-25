@@ -8,6 +8,7 @@ pub mod focus;
 mod input;
 mod list;
 mod menu;
+mod nav;
 mod states;
 
 pub use badge::{BadgeTone, badge};
@@ -17,7 +18,8 @@ pub use dialog::{ConfirmDialog, DialogAnswer, confirm_dialog};
 pub use input::{MAX_INPUT_CHARS, text_input};
 pub use list::{ListRow, list};
 pub use menu::{MenuItem, menu_button};
-pub use states::{ErrorAction, empty_state, error_state};
+pub use nav::{app_tile, nav_entry};
+pub use states::{ErrorAction, empty_state, error_state, fatal_state};
 
 use crate::tokens::TOKENS;
 use eframe::egui::{CornerRadius, Ui, accesskit::Role};
@@ -47,6 +49,8 @@ pub(crate) fn mark_selected(ui: &Ui, id: eframe::egui::Id, selected: bool) {
     });
 }
 
+#[cfg(test)]
+mod nav_tests;
 #[cfg(test)]
 pub(crate) mod support_tests;
 #[cfg(test)]

@@ -103,3 +103,14 @@ pub fn error_state(
         .inner
     })
 }
+
+/// Fehler, nach dem es nicht weitergeht (Startfehler-Fenster, Tasks T2): Warnmeldung mit nur einem Knopf. Gibt
+/// `true` zurück, wenn „Beenden“ (Text `quit`) gedrückt wurde.
+pub fn fatal_state(ui: &mut Ui, title: &str, text: &str, quit: &str) -> bool {
+    let look = look_ui(ui);
+    centered(ui, "daedyx-fatal", Role::Alert, title, |ui| {
+        circle(ui, &look, true);
+        heading_and_text(ui, &look, title, text);
+        button(ui, ButtonKind::Primary, quit).clicked()
+    })
+}
