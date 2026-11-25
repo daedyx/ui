@@ -1,0 +1,2 @@
+# Einheitliche Zeilenenden im Repository (Review T1a N-5): Text immer LF, auch unter Windows.
+* text=auto eol=lf
