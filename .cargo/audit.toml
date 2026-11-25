@@ -1,3 +1,6 @@
 # Gleiche Ausnahmen wie `deny.toml` (cargo audit liest deny.toml nicht). Ja des Betreuers ausstehend (Tasks T1a).
 [advisories]
-ignore = ["RUSTSEC-2026-0459", "RUSTSEC-2026-0543", "RUSTSEC-2026-0555"]
+ignore = [
+  "RUSTSEC-2026-0459", "RUSTSEC-2026-0543", "RUSTSEC-2026-0555",
+  "RUSTSEC-2026-0370", "RUSTSEC-2026-0371", "RUSTSEC-2026-0372",
+]

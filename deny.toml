@@ -13,11 +13,15 @@ ignore = [
   { id = "RUSTSEC-2026-0459", reason = "SQLite-Lücke nur mit präparierter DB-/WAL-Datei; die Apps bringen SQLCipher mit, hier nur Tests mit Speicher-Datenbank (wie Kern A-004)." },
   { id = "RUSTSEC-2026-0543", reason = "chrono nicht mehr gepflegt, keine bekannte Lücke; Ersatz ist ein eigener Auftrag (wie Kern)." },
   { id = "RUSTSEC-2026-0555", reason = "chrono-tz nicht mehr gepflegt, keine bekannte Lücke; Ersatz zusammen mit chrono (wie Kern)." },
+  # Nur Linux-D-Bus über accesskit/egui (unter Windows und macOS nicht im Bau); wie Desk A-016 bis A-018 (Review T1a R-4).
+  { id = "RUSTSEC-2026-0370", reason = "zvariant nicht gepflegt, nur Linux-D-Bus über accesskit (wie Desk A-016)." },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names nicht gepflegt, wie zvariant (Desk A-017)." },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive nicht gepflegt, wie zvariant (Desk A-018)." },
 ]
 
 [licenses]
 allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause",
-         "ISC", "Zlib", "Unicode-3.0", "CC0-1.0", "0BSD", "BSL-1.0", "MPL-2.0", "OpenSSL",
+         "ISC", "Zlib", "Unicode-3.0", "CC0-1.0", "0BSD", "BSL-1.0", "MPL-2.0",
          "CDLA-Permissive-2.0", "OFL-1.1", "Ubuntu-font-1.0"]
 confidence-threshold = 0.9
 
@@ -28,6 +32,7 @@ wildcards = "deny"
 allow-wildcard-paths = true
 deny = [
   { name = "native-tls", reason = "rustls benutzen" },
+  { name = "openssl", reason = "rustls benutzen (Review T1a R-2)" },
 ]
 
 [sources]

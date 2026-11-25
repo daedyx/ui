@@ -2,7 +2,7 @@
 use std::process::Command;
 
 /// Einzige Stelle, an der das Werkzeug ein Programm startet: `git` mit festen Argumenten.
-#[allow(clippy::disallowed_methods, reason = "SICHERHEIT-AUSNAHMEN A-002")]
+#[allow(clippy::disallowed_methods, reason = "SICHERHEIT-AUSNAHMEN A-013")]
 fn git(args: &[&str]) -> Result<Vec<u8>, String> {
     let out = Command::new("git")
         .args(args)
