@@ -25,7 +25,7 @@ pub trait Jobs: Send + Sync {
 /// Titel und Text der Benachrichtigung (aus der Sprachdatei). Ohne `show_titles` neutral, nur mit der Uhrzeit.
 pub fn render(texts: &Texts, n: &Notice, show_titles: bool) -> (String, String) {
     let (title, at, none) = match n.kind {
-        NoticeKind::TaskLead { minutes_before } => {
+        NoticeKind::TaskLead { minutes_until } => {
             let title = if show_titles {
                 "hintergrund.aufgabe.titel"
             } else {
@@ -33,7 +33,7 @@ pub fn render(texts: &Texts, n: &Notice, show_titles: bool) -> (String, String) 
             };
             return (
                 texts.tf(title, &[("titel", &n.title)]),
-                lead_text(texts, minutes_before),
+                lead_text(texts, minutes_until),
             );
         }
         NoticeKind::Event => (
@@ -74,15 +74,24 @@ fn rounded(m: i64, unit: i64) -> i64 {
     }
 }
 
-/// Text zum Vorlauf einer Erinnerung (Tasks): jetzt, Minuten, Stunden oder Tage vor der Fälligkeit.
+/// Text zur Restzeit einer Erinnerung (Tasks): seit n Minuten, jetzt, oder Minuten, Stunden, Tage bis zur Fälligkeit.
 fn lead_text(texts: &Texts, m: i64) -> String {
     const HOUR: i64 = 60;
     const DAY: i64 = 1440;
     const TWO_HOURS: i64 = 120;
     const TWO_DAYS: i64 = 2880;
     let n = |v: i64| v.to_string();
-    if m <= 0 {
+    if m == -1 {
+        texts.t("hintergrund.aufgabe.seit_einer_minute")
+    } else if m < 0 {
+        texts.tf(
+            "hintergrund.aufgabe.seit_minuten",
+            &[("n", &n(m.saturating_neg()))],
+        )
+    } else if m == 0 {
         texts.t("hintergrund.aufgabe.jetzt")
+    } else if m == 1 {
+        texts.t("hintergrund.aufgabe.in_einer_minute")
     } else if m < HOUR {
         texts.tf("hintergrund.aufgabe.in_minuten", &[("n", &n(m))])
     } else if m < TWO_HOURS {

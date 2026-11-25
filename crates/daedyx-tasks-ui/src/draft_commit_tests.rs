@@ -66,3 +66,19 @@ fn unbrauchbares_datum_haelt_die_app_offen() {
     let t = ui.store.as_deref().unwrap().task(&id).unwrap();
     assert_eq!(t.due.as_deref(), Some("2026-12-24"));
 }
+
+#[test]
+fn alter_fehler_blockiert_das_beenden_nicht() {
+    // Review T4, M4-1: Ein Fehler aus einer früheren Aktion zählt nicht; nur der aktuelle Versuch entscheidet.
+    let texts = crate::texts::texts(Language::De);
+    let (mut ui, _) = ui_with_first_task();
+    ui.error = Some("aufgaben.fehler.zu_tief".into());
+    assert!(ui.commit_draft(&texts), "nichts geändert, also beenden");
+    ui.error = Some("aufgaben.fehler.zu_tief".into());
+    ui.draft.title = "Altglas wegbringen".into();
+    assert!(
+        ui.commit_draft(&texts),
+        "Änderung gelingt trotz altem Fehler"
+    );
+    assert!(ui.error.is_none());
+}

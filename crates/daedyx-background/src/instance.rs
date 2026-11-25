@@ -28,6 +28,23 @@ pub enum Role<L = Listener> {
     Secondary,
 }
 
+/// Erste Pause vor einem neuen Versuch; sie verdoppelt sich bis `RETRY_MAX`.
+pub const RETRY_FIRST: std::time::Duration = std::time::Duration::from_millis(50);
+pub const RETRY_MAX: std::time::Duration = std::time::Duration::from_secs(2);
+
+/// Ruft `attempt` mit wachsender Pause (50 ms bis 2 s), bis es gelingt. Der Pipe-Dienst endet so nie wegen eines
+/// vorübergehenden Fehlers (Review T4, H4-1); sonst wäre der nächste Start selbst „primär“.
+pub async fn retry_with_pause<T, E>(mut attempt: impl FnMut() -> Result<T, E>) -> T {
+    let mut pause = RETRY_FIRST;
+    loop {
+        tokio::time::sleep(pause).await;
+        if let Ok(v) = attempt() {
+            return v;
+        }
+        pause = pause.saturating_mul(2).min(RETRY_MAX);
+    }
+}
+
 #[cfg(windows)]
 pub use win::{Listener, acquire, notify_primary};
 
@@ -90,30 +107,34 @@ mod win {
             let Listener { name, mut server } = self;
             loop {
                 if server.connect().await.is_err() {
-                    // Nie auf derselben Instanz im Kreis laufen (Review M-1): Instanz ersetzen, kurz warten.
-                    tokio::time::sleep(RETRY_PAUSE).await;
-                    match ServerOptions::new()
-                        .reject_remote_clients(true)
-                        .create(&name)
-                    {
-                        Ok(n) => server = n,
-                        Err(_) => return,
-                    }
+                    // Nie auf derselben Instanz im Kreis laufen (Review M-1): Instanz ersetzen, mit Pause.
+                    server = super::retry_with_pause(|| create(&name)).await;
                     continue;
                 }
-                // Neue Instanz anlegen, bevor die alte bedient wird, damit die Pipe nie fehlt.
-                let next = match ServerOptions::new()
-                    .reject_remote_clients(true)
-                    .create(&name)
-                {
-                    Ok(n) => n,
-                    Err(_) => return,
-                };
-                let conn = std::mem::replace(&mut server, next);
-                let s = sink.clone();
-                tokio::spawn(async move { handle(conn, s).await });
+                // Neue Instanz anlegen, bevor die alte bedient wird, damit die Pipe nie fehlt. Klappt das nicht,
+                // wird die Verbindung trotzdem bedient und das Anlegen mit Pause wiederholt, statt den Dienst zu
+                // beenden (Review T4, H4-1).
+                match create(&name) {
+                    Ok(next) => {
+                        let conn = std::mem::replace(&mut server, next);
+                        let s = sink.clone();
+                        tokio::spawn(async move { handle(conn, s).await });
+                    }
+                    Err(_) => {
+                        let s = sink.clone();
+                        tokio::spawn(async move { handle(server, s).await });
+                        server = super::retry_with_pause(|| create(&name)).await;
+                    }
+                }
             }
         }
+    }
+
+    /// Weitere Instanz derselben Pipe, nur für Verbindungen auf diesem Rechner.
+    fn create(name: &str) -> io::Result<NamedPipeServer> {
+        ServerOptions::new()
+            .reject_remote_clients(true)
+            .create(name)
     }
 
     /// Liest bis zum Auflegen des Clients (auch in Stücken), höchstens `MAX_MESSAGE` Bytes und `READ_LIMIT` lang.
@@ -133,7 +154,6 @@ mod win {
     /// Längste Nachricht, die überhaupt gelesen wird (die Wörter haben 4 Bytes).
     const MAX_MESSAGE: usize = 16;
     const READ_LIMIT: Duration = Duration::from_secs(2);
-    const RETRY_PAUSE: Duration = Duration::from_millis(50);
 }
 
 #[cfg(not(windows))]

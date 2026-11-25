@@ -39,9 +39,9 @@ fn schalter_wieder_an_versteckt_wie_bisher() {
     assert!(!w.apply(&Event::Show).is_empty());
 }
 
-fn lead(minutes_before: i64) -> Notice {
+fn lead(minutes_until: i64) -> Notice {
     Notice {
-        kind: NoticeKind::TaskLead { minutes_before },
+        kind: NoticeKind::TaskLead { minutes_until },
         title: "Wasserzähler ablesen".into(),
         time: String::new(),
     }
@@ -55,8 +55,12 @@ fn body(language: Language, minutes: i64) -> String {
 fn faellig_in_minuten_stunden_tagen() {
     let de = Language::De;
     for (m, want) in [
-        (-5, "Jetzt fällig"),
+        (i64::MIN, "Seit 9223372036854775807 Minuten fällig"),
+        (-90, "Seit 90 Minuten fällig"),
+        (-5, "Seit 5 Minuten fällig"),
+        (-1, "Seit 1 Minute fällig"),
         (0, "Jetzt fällig"),
+        (1, "Fällig in 1 Minute"),
         (5, "Fällig in 5 Minuten"),
         (59, "Fällig in 59 Minuten"),
         (60, "Fällig in 1 Stunde"),
@@ -74,6 +78,10 @@ fn faellig_in_minuten_stunden_tagen() {
     assert_eq!(body(Language::En, 60), "Due in 1 hour");
     assert_eq!(body(Language::Fr, 2880), "À faire dans 2 jours");
     assert_eq!(body(Language::Fr, 0), "À faire maintenant");
+    assert_eq!(body(Language::En, -3), "Overdue by 3 minutes");
+    assert_eq!(body(Language::En, 1), "Due in 1 minute");
+    assert_eq!(body(Language::Fr, -1), "En retard de 1 minute");
+    assert_eq!(body(Language::Fr, -7), "En retard de 7 minutes");
 }
 
 #[test]
@@ -85,4 +93,24 @@ fn vorlauf_standard_ohne_titel() {
     assert_eq!(body, "Fällig in 10 Minuten");
     let (title, _) = render(&t, &lead(10), true);
     assert_eq!(title, "Aufgabe: Wasserzähler ablesen");
+}
+
+#[test]
+fn pipe_dienst_versucht_mit_pause_erneut() {
+    // Review T4, H4-1: Ein Fehler beim Anlegen beendet den Dienst nicht, es folgt ein neuer Versuch mit Pause.
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_time()
+        .build()
+        .unwrap();
+    let mut tries = 0;
+    let started = std::time::Instant::now();
+    let got: u32 = rt.block_on(crate::instance::retry_with_pause(|| {
+        tries += 1;
+        if tries < 4 { Err(()) } else { Ok(7) }
+    }));
+    assert_eq!((got, tries), (7, 4));
+    assert!(
+        started.elapsed() >= std::time::Duration::from_millis(50 + 100 + 200 + 400),
+        "wachsende Pause"
+    );
 }

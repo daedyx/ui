@@ -8,8 +8,10 @@ use serde_json::json;
 
 impl TasksUi {
     /// Übernimmt geänderte Felder des Entwurfs. `false`: etwas ließ sich nicht übernehmen (Datum unbrauchbar, Kern
-    /// lehnt ab); der Fehler steht dann in `error`.
+    /// lehnt ab); der Fehler steht dann in `error`. Nur dieser Versuch zählt: Ein Fehler aus einer früheren Aktion
+    /// wird vorher gelöscht und hält das Beenden nicht auf (Review T4, M4-1).
     pub fn commit_draft(&mut self, texts: &Texts) -> bool {
+        self.error = None;
         if self.draft.id.is_empty() {
             return true;
         }
