@@ -52,12 +52,21 @@ impl TasksUi {
     }
 
     /// Aufgabe samt Unterbaum ans Ende der obersten Aufgaben von `list` (ohne Abschnitt, ohne Oberaufgabe).
+    /// Auf die eigene Liste gezogen: immer Abbruch, auch bei Unteraufgaben (keine stille Umwandlung zur obersten
+    /// Aufgabe; Master-Entscheid zu Review T3b, N3b-3).
     pub fn move_to_list(&mut self, id: &str, list: &str) {
-        if self
+        let own = self
             .items
             .iter()
-            .any(|t| t.id == id && t.list_id == list && t.parent_id.is_none())
-        {
+            .find(|t| t.id == id)
+            .map(|t| t.list_id.clone())
+            .or_else(|| {
+                self.store
+                    .as_deref()
+                    .and_then(|s| s.task(id).ok())
+                    .map(|t| t.list_id)
+            });
+        if own.as_deref().is_none_or(|l| l == list) {
             return;
         }
         let depth = self.features.max_depth;
@@ -87,8 +96,13 @@ impl TasksUi {
         else {
             return;
         };
-        let _ = self.run(|s| s.quick(&list, section.as_deref(), &text));
-        // Feld bleibt für die nächste Karte offen.
-        self.adding_card = Some((section, String::new()));
+        let made = self.run(|s| s.quick(&list, section.as_deref(), &text));
+        // Feld bleibt für die nächste Karte offen; der Text geht nur weg, wenn die Karte entstanden ist (N3b-2).
+        let keep = if matches!(made, Some(Some(_))) {
+            String::new()
+        } else {
+            text
+        };
+        self.adding_card = Some((section, keep));
     }
 }

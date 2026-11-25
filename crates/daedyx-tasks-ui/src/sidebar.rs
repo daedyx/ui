@@ -48,7 +48,7 @@ pub fn show(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
     );
     if tasks.search != before {
         tasks.selected = None;
-        tasks.refresh();
+        tasks.refresh_search();
     }
     let mut all: Vec<Entry> = VIEWS
         .iter()

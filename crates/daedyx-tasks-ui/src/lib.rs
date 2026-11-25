@@ -172,6 +172,8 @@ mod store_tests;
 #[cfg(test)]
 mod switch_tests;
 #[cfg(test)]
+mod t3b_fix_tests;
+#[cfg(test)]
 mod test_support;
 #[cfg(test)]
 mod tree_model_tests;

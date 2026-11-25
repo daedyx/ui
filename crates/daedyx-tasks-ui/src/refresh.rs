@@ -75,3 +75,18 @@ impl TasksUi {
         }
     }
 }
+
+impl TasksUi {
+    /// Nur die Treffer neu laden, wenn sich der Suchtext ändert (Review T3b, N3b-4): Listen und Zähler bleiben.
+    pub(crate) fn refresh_search(&mut self) {
+        if self.search.trim().is_empty() {
+            self.refresh();
+            return;
+        }
+        let Some(store) = self.store.as_deref() else {
+            return;
+        };
+        self.items = store.search(&self.search).unwrap_or_default();
+        self.progress = super::tree_model::progress(&self.items);
+    }
+}
