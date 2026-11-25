@@ -48,7 +48,7 @@ pub(crate) fn mark_selected(ui: &Ui, id: eframe::egui::Id, selected: bool) {
 }
 
 #[cfg(test)]
-mod support_tests;
+pub(crate) mod support_tests;
 #[cfg(test)]
 mod surface_tests;
 #[cfg(test)]
