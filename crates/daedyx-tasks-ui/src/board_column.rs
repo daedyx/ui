@@ -8,7 +8,9 @@ use daedyx_ui::a11y::named_scope;
 use daedyx_ui::i18n::Texts;
 use daedyx_ui::theme::look_ui;
 use daedyx_ui::tokens::{Lane, TOKENS};
-use eframe::egui::{Align, Color32, Frame, Layout, Margin, Stroke, Ui, accesskit::Role, vec2};
+use eframe::egui::{
+    Align, Color32, DragAndDrop, Frame, Layout, Margin, Stroke, Ui, accesskit::Role, vec2,
+};
 
 pub const WIDTH: f32 = 264.0;
 /// Platz für den Knopf „Aktionen“ rechts im Spaltenkopf.
@@ -45,8 +47,10 @@ pub fn show(
     lane: Lane<Color32>,
 ) -> Option<ColumnWish> {
     let look = look_ui(ui);
-    let list: Vec<daedyx_tasks_core::types::Task> =
-        cards(&tasks.items, sid).into_iter().cloned().collect();
+    let list: Vec<daedyx_tasks_core::types::Task> = cards(&tasks.items, &tasks.sections, sid)
+        .into_iter()
+        .cloned()
+        .collect();
     let pad = i8::try_from(TOKENS.spacing.s3).unwrap_or(i8::MAX);
     let frame = Frame::new()
         .fill(lane.soft)
@@ -54,6 +58,9 @@ pub fn show(
         .inner_margin(Margin::same(pad));
     let mut wish = None;
     let mut centers: Vec<(String, f32)> = Vec::new();
+    // egui nimmt beim Ablegen jede Nutzlast weg, auch eine fremde: Ein Abschnitt, der über dieser Spalte losgelassen
+    // wird, landet sonst in der Kartenablage und geht verloren. Deshalb vorher merken und unten selbst auswerten.
+    let section_drag = DragAndDrop::payload::<SectionDrag>(ui.ctx());
     let (inner, dropped) = ui.dnd_drop_zone::<CardDrag, _>(frame, |ui| {
         ui.set_width(WIDTH);
         let label = texts.tf(
@@ -109,11 +116,23 @@ pub fn show(
                         }
                         ui.add_space(f32::from(TOKENS.spacing.s2));
                     }
+                    super::board_add::show(ui, tasks, texts, sid, name);
                     ui.add_space(24.0);
                 });
             },
         );
     });
+    let released = ui.input(|i| i.pointer.any_released());
+    if let (Some(d), Some(s), None) = (section_drag, sid, wish.as_ref())
+        && released
+        && inner.response.contains_pointer()
+        && d.0 != s
+    {
+        wish = Some(ColumnWish::SectionDrop {
+            id: d.0.clone(),
+            target: s.to_owned(),
+        });
+    }
     let pointer = ui.ctx().pointer_interact_pos();
     if inner.response.dnd_hover_payload::<CardDrag>().is_some()
         && let Some(p) = pointer

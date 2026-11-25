@@ -156,5 +156,9 @@
   "aufgaben.wochentag.kurz.6": "sam.",
   "aufgaben.wochentag.6": "samedi",
   "aufgaben.wochentag.kurz.7": "dim.",
-  "aufgaben.wochentag.7": "dimanche"
+  "aufgaben.wochentag.7": "dimanche",
+  "aufgaben.karte.neu.kurz": "+ Carte",
+  "aufgaben.karte.neu": "Ajouter une carte dans « {name} »",
+  "aufgaben.karte.feld": "Nouvelle carte dans « {name} »",
+  "aufgaben.verschieben": "Déplacer vers …"
 }

@@ -84,7 +84,8 @@ fn row(ui: &mut Ui, tasks: &TasksUi, texts: &Texts, row: &Row, rect: Rect) -> Re
         .get(row.index)
         .map(|t| t.id.clone())
         .unwrap_or_default();
-    let sense = if can_drag(tasks) {
+    let draggable = can_drag(tasks) || tasks.features.move_to_list;
+    let sense = if draggable {
         Sense::click_and_drag()
     } else {
         Sense::click()
@@ -98,7 +99,8 @@ fn row(ui: &mut Ui, tasks: &TasksUi, texts: &Texts, row: &Row, rect: Rect) -> Re
         ui.ctx()
             .accesskit_node_builder(resp.id, |n| n.set_level(level));
     }
-    if can_drag(tasks) {
+    // Ziehbar zum Umsortieren (von Hand) und zum Ablegen auf einer Liste der Leiste (T3b).
+    if draggable {
         resp.dnd_set_drag_payload(RowDrag(id));
     }
     resp
@@ -123,7 +125,7 @@ pub fn show(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
         }
         if let Some(d) = resp
             .dnd_release_payload::<RowDrag>()
-            .filter(|d| d.0 != t.id)
+            .filter(|d| d.0 != t.id && can_drag(tasks))
         {
             w.drop = Some((d.0.clone(), t.id.clone()));
         }

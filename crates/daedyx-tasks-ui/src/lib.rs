@@ -3,8 +3,10 @@
 //! sofort durch den Aufgaben-Kern `daedyx-tasks-core` (kein „Speichern“). Texte über `lang/*.json` (Schlüssel
 //! `aufgaben.*`, die App führt sie in ihren eigenen Sprachdateien), Farben nur aus den Tokens von `daedyx-ui`.
 mod actions;
+mod actions_lists;
 mod actions_tree;
 mod board;
+mod board_add;
 mod board_card;
 mod board_column;
 mod board_header;
@@ -25,10 +27,13 @@ mod list_menu;
 mod list_sort;
 mod list_view;
 pub mod model;
+mod refresh;
 mod row_paint;
 mod rows;
 pub mod seed;
 mod sidebar;
+mod sidebar_drag;
+mod sidebar_entry;
 mod sidebar_lists;
 mod start;
 pub mod store;
@@ -75,6 +80,10 @@ pub struct TasksUi {
     pub features: Features,
     /// Reihenfolge der obersten Aufgaben (nur mit `Features::sorting`).
     pub sort: tree_model::SortMode,
+    /// Listen, die zuletzt als Board offen waren (`Features::board_memory`).
+    pub board_lists: std::collections::HashSet<String>,
+    /// Spalte (`None` = „Ohne Abschnitt“) mit offenem Feld „+ Karte“ und dessen Entwurf.
+    pub adding_card: Option<(Option<String>, String)>,
     /// Schlüssel der letzten Fehlermeldung (`aufgaben.fehler.*`).
     pub error: Option<String>,
 }
@@ -101,6 +110,8 @@ impl TasksUi {
             mode_switch: true,
             features: Features::DESK,
             sort: tree_model::SortMode::Hand,
+            board_lists: Default::default(),
+            adding_card: None,
             error: None,
         };
         ui.refresh();
@@ -125,55 +136,12 @@ impl TasksUi {
             .find(|(v, _)| *v == view)
             .map(|(_, n)| *n)
     }
-
-    pub fn select(&mut self, sel: Sel) {
-        if self.sel != sel || !self.search.is_empty() {
-            self.sel = sel;
-            self.selected = None;
-            self.search.clear();
-            if self.list_id().is_none() {
-                self.mode = Mode::List;
-            }
-            self.refresh();
-        }
-    }
-
-    /// Lädt Listen, Zähler, Aufgaben und Abschnitte neu (nach jeder Änderung).
-    pub fn refresh(&mut self) {
-        let Some(store) = self.store.as_deref() else {
-            return;
-        };
-        self.lists = store.lists().unwrap_or_default();
-        self.counts = store.counts().unwrap_or_default();
-        if let Sel::List(id) = &self.sel
-            && !self.lists.iter().any(|l| &l.id == id)
-        {
-            self.sel = Sel::View(View::Today);
-        }
-        let (view, list) = match &self.sel {
-            Sel::View(v) => (*v, None),
-            Sel::List(id) => (View::List, Some(id.as_str())),
-        };
-        self.items = if self.search.trim().is_empty() {
-            store.query(view, list).unwrap_or_default()
-        } else {
-            store.search(&self.search).unwrap_or_default()
-        };
-        self.sections = list
-            .map(|l| store.sections(l).unwrap_or_default())
-            .unwrap_or_default();
-        if self
-            .selected
-            .as_deref()
-            .is_some_and(|id| !self.items.iter().any(|t| t.id == id))
-        {
-            self.selected = None;
-        }
-    }
 }
 
 #[cfg(test)]
 mod alarm_tests;
+#[cfg(test)]
+mod board_more_tests;
 #[cfg(test)]
 mod colors_tests;
 #[cfg(test)]
@@ -185,7 +153,11 @@ mod guard_tests;
 #[cfg(test)]
 mod harness_tests;
 #[cfg(test)]
+mod lists_tests;
+#[cfg(test)]
 mod model_tests;
+#[cfg(test)]
+mod parity_tests;
 #[cfg(test)]
 mod repeat_tests;
 #[cfg(test)]

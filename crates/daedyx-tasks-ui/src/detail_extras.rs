@@ -62,7 +62,36 @@ fn assignee(ui: &mut Ui, texts: &Texts) {
     );
 }
 
+/// „Verschieben nach …“: Tastaturweg zum Ziehen auf eine Liste (Tasks T3b, `Features::move_to_list`).
+fn move_menu(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
+    let others: Vec<(String, String)> = tasks
+        .lists
+        .iter()
+        .filter(|l| l.id != t.list_id)
+        .map(|l| (l.id.clone(), l.name.clone()))
+        .collect();
+    if others.is_empty() {
+        return;
+    }
+    let items: Vec<MenuItem<'_>> = others
+        .iter()
+        .map(|(_, n)| MenuItem {
+            label: n,
+            shortcut: None,
+            danger: false,
+        })
+        .collect();
+    if let Some((list, _)) =
+        menu_button(ui, &texts.t("aufgaben.verschieben"), &items).and_then(|i| others.get(i))
+    {
+        tasks.move_to_list(&t.id, list);
+    }
+}
+
 pub fn show(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
+    if tasks.features.move_to_list {
+        move_menu(ui, tasks, texts, t);
+    }
     if !tasks.features.detail_extras {
         return;
     }

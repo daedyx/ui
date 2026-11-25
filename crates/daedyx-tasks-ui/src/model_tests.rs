@@ -59,13 +59,13 @@ fn spalten_beginnen_mit_ohne_abschnitt_und_karten_sind_sortiert() {
         task("y", None, Some("s1"), 1.0, false),
         task("k", Some("y"), None, 1.0, false),
     ];
-    let c: Vec<&str> = cards(&items, Some("s1"))
+    let c: Vec<&str> = cards(&items, &[section("s1")], Some("s1"))
         .iter()
         .map(|t| t.id.as_str())
         .collect();
     assert_eq!(c, ["y", "x"]);
     assert!(
-        cards(&items, None).is_empty(),
+        cards(&items, &[section("s1")], None).is_empty(),
         "Unteraufgaben sind keine Karten"
     );
 }
@@ -94,4 +94,21 @@ fn abschnitte_verschieben_und_ablegen() {
     );
     assert_eq!(dropped_sections(&s, "a", "a"), None);
     assert_eq!(dropped_sections(&s, "x", "a"), None);
+}
+
+#[test]
+fn karte_eines_unbekannten_abschnitts_steht_in_ohne_abschnitt_und_erledigte_unten() {
+    let items = vec![
+        task("weg", None, Some("geloescht"), 1.0, false),
+        task("fertig", None, Some("s1"), 1.0, true),
+        task("offen", None, Some("s1"), 2.0, false),
+    ];
+    let ids = |col| -> Vec<String> {
+        cards(&items, &[section("s1")], col)
+            .iter()
+            .map(|t| t.id.clone())
+            .collect()
+    };
+    assert_eq!(ids(None), ["weg"]);
+    assert_eq!(ids(Some("s1")), ["offen", "fertig"]);
 }

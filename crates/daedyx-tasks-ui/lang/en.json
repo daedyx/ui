@@ -156,5 +156,9 @@
   "aufgaben.wochentag.kurz.6": "Sat",
   "aufgaben.wochentag.6": "Saturday",
   "aufgaben.wochentag.kurz.7": "Sun",
-  "aufgaben.wochentag.7": "Sunday"
+  "aufgaben.wochentag.7": "Sunday",
+  "aufgaben.karte.neu.kurz": "+ Card",
+  "aufgaben.karte.neu": "Add card to “{name}”",
+  "aufgaben.karte.feld": "New card in “{name}”",
+  "aufgaben.verschieben": "Move to …"
 }

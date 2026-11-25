@@ -47,13 +47,26 @@ pub fn columns(sections: &[Section]) -> Vec<Option<String>> {
         .collect()
 }
 
-/// Karten einer Spalte (nur Aufgaben ohne Oberaufgabe), nach Position.
-pub fn cards<'a>(items: &'a [Task], column: Option<&str>) -> Vec<&'a Task> {
+/// Spalte einer Karte: ihr Abschnitt, wenn es ihn in `sections` gibt, sonst „Ohne Abschnitt“ (`None`). So bleibt eine
+/// Karte sichtbar, deren Abschnitt anderswo gelöscht wurde (Abgleich), statt aus allen Spalten zu fallen.
+pub fn column_of<'a>(t: &'a Task, sections: &[Section]) -> Option<&'a str> {
+    t.section_id
+        .as_deref()
+        .filter(|s| sections.iter().any(|x| x.id == *s))
+}
+
+/// Karten einer Spalte (nur Aufgaben ohne Oberaufgabe): offene nach Position, erledigte darunter.
+pub fn cards<'a>(items: &'a [Task], sections: &[Section], column: Option<&str>) -> Vec<&'a Task> {
     let mut v: Vec<&Task> = items
         .iter()
-        .filter(|t| t.parent_id.is_none() && t.section_id.as_deref() == column)
+        .filter(|t| t.parent_id.is_none() && column_of(t, sections) == column)
         .collect();
-    v.sort_by(|a, b| a.position.total_cmp(&b.position));
+    v.sort_by(|a, b| {
+        a.done_at
+            .is_some()
+            .cmp(&b.done_at.is_some())
+            .then(a.position.total_cmp(&b.position))
+    });
     v
 }
 

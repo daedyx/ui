@@ -14,6 +14,7 @@ fn margin(v: u8) -> Margin {
 }
 
 pub fn show(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
+    tasks.remember_mode();
     let look = look_ui(ui);
     let p = look.p;
     let line = Stroke::new(TOKENS.line.fine, p.line);

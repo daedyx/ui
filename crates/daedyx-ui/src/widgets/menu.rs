@@ -1,12 +1,14 @@
 //! Menü: Fläche, Radius 8, Zeilen 32 px, Kürzel rechts in schwachem Grau, Trennlinie vor
 //! gefährlichen Einträgen wie „Löschen“. Öffnet unter seinem Knopf, Esc oder Klick daneben schließt.
+//! Tastatur (Tasks T3b, Vorlage `ContextMenu.tsx`): beim Öffnen hat der erste Eintrag den Fokus, Pfeil hoch/runter
+//! wandert im Kreis, Enter/Leertaste wählt, Esc schließt und gibt den Fokus an den Knopf zurück.
 use super::button::{ButtonKind, button};
 use super::name_container;
 use crate::theme::look_ui;
 use crate::tokens::TOKENS;
 use eframe::egui::{
-    Align2, Area, FontFamily, FontId, Frame, Id, Key, Margin, Order, Response, Sense, Stroke, Ui,
-    WidgetInfo, accesskit::Role, pos2, vec2,
+    Align2, Area, EventFilter, FontFamily, FontId, Frame, Id, Key, Margin, Order, Response, Sense,
+    Stroke, Ui, WidgetInfo, accesskit::Role, pos2, vec2,
 };
 
 const WIDTH: f32 = 220.0;
@@ -56,10 +58,13 @@ pub fn menu_button(ui: &mut Ui, label: &str, items: &[MenuItem<'_>]) -> Option<u
     let opener = button(ui, ButtonKind::Secondary, label);
     let state_id = opener.id.with(Id::unique("daedyx-menu-open"));
     let mut open = ui.data(|d| d.get_temp::<bool>(state_id)).unwrap_or(false);
+    let mut first = false;
     if opener.clicked() {
         open = !open;
+        first = open;
     }
     let mut chosen = None;
+    let mut ids: Vec<Id> = Vec::new();
     if open {
         let look = look_ui(ui);
         let gap = f32::from(TOKENS.spacing.s1);
@@ -81,13 +86,25 @@ pub fn menu_button(ui: &mut Ui, label: &str, items: &[MenuItem<'_>]) -> Option<u
                             if entry.danger && index > 0 {
                                 ui.separator();
                             }
-                            if item(ui, entry).clicked() {
+                            let r = item(ui, entry);
+                            // Pfeil hoch/runter gehört dem Menü (Kreis), nicht der Fokusbewegung von egui.
+                            let arrows = EventFilter {
+                                vertical_arrows: true,
+                                ..EventFilter::default()
+                            };
+                            ui.memory_mut(|m| m.set_focus_lock_filter(r.id, arrows));
+                            ids.push(r.id);
+                            if r.clicked() {
                                 chosen = Some(index);
                             }
                         }
                     });
             });
+        keyboard(ui, &ids, first);
         let escape = ui.input(|i| i.key_pressed(Key::Escape));
+        if escape {
+            opener.request_focus();
+        }
         let outside = ui.input(|i| i.pointer.any_click())
             && !opener.clicked()
             && !ui
@@ -99,4 +116,28 @@ pub fn menu_button(ui: &mut Ui, label: &str, items: &[MenuItem<'_>]) -> Option<u
     }
     ui.data_mut(|d| d.insert_temp(state_id, open));
     chosen
+}
+
+/// Fokus im offenen Menü: erster Eintrag beim Öffnen, Pfeil hoch/runter im Kreis.
+fn keyboard(ui: &Ui, ids: &[Id], first: bool) {
+    if first && let Some(id) = ids.first() {
+        ui.memory_mut(|m| m.request_focus(*id));
+        return;
+    }
+    let Some(at) = ids.iter().position(|id| ui.memory(|m| m.has_focus(*id))) else {
+        return;
+    };
+    let down = ui.input_mut(|i| i.consume_key(eframe::egui::Modifiers::NONE, Key::ArrowDown));
+    let up = ui.input_mut(|i| i.consume_key(eframe::egui::Modifiers::NONE, Key::ArrowUp));
+    let len = ids.len();
+    let next = if down {
+        Some(at.saturating_add(1).checked_rem(len).unwrap_or(0))
+    } else if up {
+        Some(at.checked_sub(1).unwrap_or(len.saturating_sub(1)))
+    } else {
+        None
+    };
+    if let Some(id) = next.and_then(|n| ids.get(n)) {
+        ui.memory_mut(|m| m.request_focus(*id));
+    }
 }

@@ -1,8 +1,9 @@
-//! Baum und Erinnerungen über den Kern (Tasks T3a): Ebene einer Aufgabe, Anlegen und Verschieben mit erlaubter Tiefe,
+//! Baum, Erinnerungen und Reihenfolge der Listen über den Kern (Tasks T3a/T3b): Ebene einer Aufgabe, Anlegen und Verschieben mit erlaubter Tiefe,
 //! mehrere Erinnerungen je Aufgabe. Die Tiefe gibt die App vor (`Features::max_depth`).
 use crate::store::TaskStore;
 use daedyx_tasks_core::TaskError;
 use daedyx_tasks_core::edit_alarms;
+use daedyx_tasks_core::edit_lists;
 use daedyx_tasks_core::edit_tasks as edit;
 use daedyx_tasks_core::tree;
 use daedyx_tasks_core::types::Task;
@@ -48,5 +49,11 @@ impl TaskStore {
     pub fn set_alarms(&self, id: &str, minutes: &[i64]) -> Result<(), TaskError> {
         let now = self.now_ms();
         self.with(|c| edit_alarms::set_alarms(c, id, minutes, now))
+    }
+
+    /// Neue Reihenfolge der eigenen Listen (Position = Index).
+    pub fn reorder_lists(&self, ids: &[String]) -> Result<(), TaskError> {
+        let now = self.now_ms();
+        self.with(|c| edit_lists::reorder_lists(c, ids, now))
     }
 }

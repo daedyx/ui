@@ -1,6 +1,6 @@
 //! Was der Baustein je App kann (Plan Tasks-Rust §3, T3a). Standard ist Desk, so wie M6a gebaut wurde: eine Ebene
 //! Unteraufgaben, eine Erinnerung als Menü, einfache Wiederholung, keine Sortierungen, kein Ziehen in der Liste, keine
-//! Zusatzfelder im Detail. Tasks schaltet alles ein ([`Features::TASKS`]).
+//! Zusatzfelder im Detail, kein Umsortieren der Listen, kein Ziehen auf Listen, kein „+ Karte“. Tasks schaltet alles ein ([`Features::TASKS`]).
 use daedyx_tasks_core::edit_alarms::MAX_ALARMS;
 use daedyx_tasks_core::tree::DESK_MAX_DEPTH;
 
@@ -21,6 +21,14 @@ pub struct Features {
     pub drag_rows: bool,
     /// Abschnitt und der Platzhalter „Zuständig“ im Detail.
     pub detail_extras: bool,
+    /// Eigene Listen per Ziehen und Alt+↑/↓ umsortieren (T3b).
+    pub lists_order: bool,
+    /// Aufgabe auf eine Liste in der Leiste ziehen, dazu im Detail „Verschieben nach …“ (T3b).
+    pub move_to_list: bool,
+    /// „+ Karte“ unter jeder Spalte des Boards (T3b).
+    pub board_cards: bool,
+    /// Je Liste merken, ob sie als Board offen war (T3b; für die Sitzung).
+    pub board_memory: bool,
 }
 
 impl Features {
@@ -31,6 +39,10 @@ impl Features {
         sorting: false,
         drag_rows: false,
         detail_extras: false,
+        lists_order: false,
+        move_to_list: false,
+        board_cards: false,
+        board_memory: false,
     };
 
     pub const TASKS: Features = Features {
@@ -40,6 +52,10 @@ impl Features {
         sorting: true,
         drag_rows: true,
         detail_extras: true,
+        lists_order: true,
+        move_to_list: true,
+        board_cards: true,
+        board_memory: true,
     };
 
     /// Mehr als eine Ebene: Baum mit Zählern über alle Nachfahren und Ebene für Screenreader.

@@ -30,11 +30,11 @@ fn card_key(tasks: &mut TasksUi, id: &str, key: CardKey) {
             else {
                 return;
             };
-            let end = cards(&tasks.items, target.as_deref()).len();
+            let end = cards(&tasks.items, &tasks.sections, target.as_deref()).len();
             tasks.move_card(id, target.as_deref(), end);
         }
         CardKey::Step(step) => {
-            let list = cards(&tasks.items, here.as_deref());
+            let list = cards(&tasks.items, &tasks.sections, here.as_deref());
             let Some(pos) = list.iter().position(|t| t.id == id) else {
                 return;
             };

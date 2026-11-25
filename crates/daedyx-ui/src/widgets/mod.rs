@@ -50,6 +50,8 @@ pub(crate) fn mark_selected(ui: &Ui, id: eframe::egui::Id, selected: bool) {
 }
 
 #[cfg(test)]
+mod menu_tests;
+#[cfg(test)]
 mod nav_tests;
 #[cfg(test)]
 pub(crate) mod support_tests;

@@ -39,7 +39,18 @@ impl TasksUi {
         else {
             return;
         };
+        let today = self.sel == super::Sel::View(daedyx_tasks_core::smart::View::Today);
         if let Some(Some(t)) = self.run(|s| s.quick(&list, None, &text)) {
+            // In „Heute“ ohne genannten Tag: fällig heute, sonst verschwände sie gleich wieder aus der Ansicht.
+            if today && t.due.is_none() {
+                let day = self
+                    .store
+                    .as_deref()
+                    .map(|s| s.today().format("%Y-%m-%d").to_string());
+                if let Some(day) = day {
+                    self.set(&t.id, &[("due", serde_json::json!(day))]);
+                }
+            }
             self.selected = Some(t.id);
         }
     }
@@ -86,7 +97,7 @@ impl TasksUi {
         let Some(list) = self.list_id().map(str::to_owned) else {
             return;
         };
-        let others: Vec<f64> = cards(&self.items, column)
+        let others: Vec<f64> = cards(&self.items, &self.sections, column)
             .iter()
             .filter(|t| t.id != id)
             .map(|t| t.position)

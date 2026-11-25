@@ -108,3 +108,27 @@ pub fn id_of(h: &Harness<'static, TasksUi>, title: &str) -> String {
         .map(|t| t.id.clone())
         .unwrap()
 }
+
+/// Ziehen mit dem kittest-Zeiger in zehn Schritten, Loslassen über `to` (Muster aus dem Board-Test von Desk;
+/// kittests `drop_at` nimmt den Zeiger im selben Bild weg).
+pub fn drag(h: &mut Harness<'static, TasksUi>, from: eframe::egui::Pos2, to: eframe::egui::Pos2) {
+    use eframe::egui::{Event, Modifiers, PointerButton};
+    h.hover_at(from);
+    h.run();
+    h.drag_at(from);
+    h.run();
+    for step in 1..=10 {
+        h.hover_at(from.lerp(to, step as f32 / 10.0));
+        h.run();
+    }
+    assert!(eframe::egui::DragAndDrop::has_any_payload(&h.ctx));
+    h.event(Event::PointerButton {
+        pos: to,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    });
+    h.run();
+    h.run();
+    h.run();
+}
