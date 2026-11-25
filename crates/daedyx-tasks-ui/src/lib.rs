@@ -186,6 +186,8 @@ impl TasksUi {
 #[cfg(test)]
 mod colors_tests;
 #[cfg(test)]
+mod gap_tests;
+#[cfg(test)]
 mod guard_tests;
 #[cfg(test)]
 mod harness_tests;

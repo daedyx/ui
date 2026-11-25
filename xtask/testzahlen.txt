@@ -1,0 +1,6 @@
+# Mindestzahl bestandener Tests je Testprogramm (cargo xtask testzahl, SICHERHEIT 5.7, Review T1a N-3).
+# Format: <Zahl> <Testprogramm wie im Protokoll von cargo test>. Mehr Tests sind immer erlaubt; die Zahl zu senken
+# oder eine Zeile zu löschen ist eine Lockerung und braucht das Ja des Betreuers (wie eine Ausnahme).
+23 unittests src/lib.rs (daedyx_tasks_ui)
+53 unittests src/lib.rs (daedyx_ui)
+64 unittests src/main.rs (xtask)

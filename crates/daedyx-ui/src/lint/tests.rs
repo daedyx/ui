@@ -94,3 +94,27 @@ fn workspace_haelt_die_ui_regeln_ein() {
     let found = check_workspace();
     assert!(found.is_empty(), "Verstöße:\n{}", found.join("\n"));
 }
+
+/// Review T1a N-4: Übersprungen wird nur, wer fest benannt ist und einen eigenen Wächter hat. Ein neues Crate mit
+/// eigenen Sprachdateien fällt nicht still heraus, sondern wird mit den Texten von daedyx-ui geprüft (und rot).
+#[test]
+fn nur_benannte_crates_mit_eigenem_waechter_werden_uebersprungen() {
+    let crates = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+    for name in super::OWN_GUARD {
+        let guard = crates.join(name).join("src").join("guard_tests.rs");
+        let src = std::fs::read_to_string(&guard).unwrap_or_default();
+        assert!(src.contains("check_files"), "{name}: eigener Wächter fehlt");
+    }
+    let files = source_files();
+    assert!(files.iter().all(|f| {
+        !super::OWN_GUARD
+            .iter()
+            .any(|n| f.to_string_lossy().contains(n))
+    }));
+    assert!(
+        files
+            .iter()
+            .any(|f| f.to_string_lossy().contains("daedyx-galerie")),
+        "Galerie wird geprüft"
+    );
+}

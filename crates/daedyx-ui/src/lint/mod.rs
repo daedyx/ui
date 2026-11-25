@@ -13,13 +13,15 @@ use std::path::{Path, PathBuf};
 
 const FILE_ENDINGS: &[&str] = &[".json", ".rs", ".png", ".ttf", ".ttc", ".toml", ".md"];
 
-/// Quelltexte aller Crates im Workspace, ohne Testdateien und ohne diesen Prüfordner. Ein Crate mit eigenen
-/// Sprachdateien (`lang/de.json`, z. B. `daedyx-tasks-ui`) prüft sich selbst mit seinen Texten (eigener Wächter-Test).
+/// Crates mit eigenen Sprachdateien und eigenem Wächter-Test (`src/guard_tests.rs`, geprüft in den Tests). Nur diese
+/// überspringt der Workspace-Wächter; jedes andere Crate prüft er mit den Texten von daedyx-ui (Review T1a N-4).
+pub const OWN_GUARD: [&str; 1] = ["daedyx-tasks-ui"];
+
+/// Quelltexte aller Crates im Workspace, ohne Testdateien, ohne diesen Prüfordner und ohne [`OWN_GUARD`].
 pub fn source_files() -> Vec<PathBuf> {
     let here = Path::new(env!("CARGO_MANIFEST_DIR"));
     let crates = here.join("..");
-    let own_texts =
-        |dir: &Path| dir.join("lang").join("de.json").is_file() && !dir.ends_with("daedyx-ui");
+    let own_texts = |dir: &Path| OWN_GUARD.iter().any(|name| dir.ends_with(name));
     let dirs: Vec<PathBuf> = std::fs::read_dir(&crates)
         .map(|rd| {
             rd.filter_map(|e| e.ok())

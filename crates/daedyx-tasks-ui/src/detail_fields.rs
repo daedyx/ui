@@ -39,7 +39,7 @@ pub fn draft_due(tasks: &TasksUi, texts: &Texts, t: &Task) -> (String, String) {
 }
 
 /// Neue Werte für `due`/`due_has_time` aus den Eingaben; `None` = Eingabe unbrauchbar.
-fn parse_due(tasks: &TasksUi, texts: &Texts) -> Option<[(&'static str, Value); 2]> {
+pub(crate) fn parse_due(tasks: &TasksUi, texts: &Texts) -> Option<[(&'static str, Value); 2]> {
     let (date, time) = (tasks.draft.date.trim(), tasks.draft.time.trim());
     if date.is_empty() {
         return time
