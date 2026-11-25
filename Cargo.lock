@@ -616,8 +616,8 @@ dependencies = [
 
 [[package]]
 name = "daedyx-tasks-core"
-version = "0.2.0"
-source = "git+https://github.com/daedyx/core?rev=92582e1d6fb8be49873157231170e6dd8c077963#92582e1d6fb8be49873157231170e6dd8c077963"
+version = "0.2.3"
+source = "git+https://github.com/daedyx/core?rev=3e5e7eb1c94fb0e1912f6f7daa03120a60597a42#3e5e7eb1c94fb0e1912f6f7daa03120a60597a42"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -3278,6 +3278,10 @@ name = "xml-rs"
 version = "0.8.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
+
+[[package]]
+name = "xtask"
+version = "0.1.0"
 
 [[package]]
 name = "zbus"

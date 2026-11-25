@@ -44,6 +44,7 @@ Einmal je Klon: `git config core.hooksPath .githooks` (Pre-Commit gegen echte Da
 Workspace-Lints: `unsafe_code = "forbid"`, kein `unwrap`/`expect`/`panic`/Index im Normalpfad, keine
 Ausgaben auf die Konsole. `deny.toml` prüft Lücken, Lizenzen und Quellen. Ausnahmen stehen in
 `docs/SICHERHEIT-AUSNAHMEN.md`, Abhängigkeiten in `docs/ABHAENGIGKEITEN.md`.
+- `cargo xtask scan`, `cargo xtask exceptions`, `cargo xtask testzahl <protokoll>` wie im Kern (Review T1a N-3): Datenscan, Ausnahmenzähler gegen `docs/SICHERHEIT-AUSNAHMEN.md`, Mindestzahl der Tests aus `xtask/testzahlen.txt`.
 
 ## Lizenz
 

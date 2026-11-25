@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/daedyx-ui", "crates/daedyx-tasks-ui", "crates/daedyx-galerie"]
+members = ["crates/daedyx-ui", "crates/daedyx-tasks-ui", "crates/daedyx-galerie", "xtask"]
 
 [workspace.package]
 version = "0.1.0"
@@ -22,7 +22,7 @@ chrono-tz = "=0.10.4"
 rusqlite = "=0.37.0"
 # Aufgaben-Kern (privates Repository daedyx/core). Bis zum nächsten Kern-Tag der Stand von Zweig `paket-t1a`
 # (Schnelleingabe aus Desk), danach per Tag.
-daedyx-tasks-core = { git = "https://github.com/daedyx/core", rev = "92582e1d6fb8be49873157231170e6dd8c077963" }
+daedyx-tasks-core = { git = "https://github.com/daedyx/core", rev = "3e5e7eb1c94fb0e1912f6f7daa03120a60597a42" }
 
 # Sicherheitsrahmen (SICHERHEIT.md, Anhang A). Ändern nur mit Björns Ja.
 [workspace.lints.rust]

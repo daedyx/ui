@@ -8,6 +8,8 @@ for f in $(git diff --cached --name-only --diff-filter=ACMR); do
     *.db|*.sqlite|*.eml|*.msg|*.mbox|*.pst|*.ics|*.vcf|*.pem|*.key|*.p12|*.pfx|.env|*.env)
       echo "  $f: verbotene Dateiart"; fail=1; continue ;;
     .githooks/scan.sh|scripts/scan-selbsttest.sh) continue ;;
+    # Prüfwerkzeug: enthält die Suchmuster selbst; es prüft sich mit `cargo xtask scan --staged` (unten).
+    xtask/src/*.rs) continue ;;
   esac
   size="$(git cat-file -s ":$f")"
   if [ "$size" -gt 1048576 ]; then echo "  $f: größer als 1 MB"; fail=1; continue; fi
@@ -20,6 +22,8 @@ else
 fi
 if [ -f Cargo.toml ] && command -v cargo >/dev/null 2>&1; then
   cargo fmt --all --check >/dev/null 2>&1 || { echo "  cargo fmt: Formatierung abweichend (cargo fmt --all)"; fail=1; }
+  cargo xtask scan --staged || fail=1
+  cargo xtask exceptions || fail=1
 fi
 if [ $fail -ne 0 ]; then echo "Commit gestoppt: bitte die Fundstellen beheben."; exit 1; fi
 exit 0

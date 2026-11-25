@@ -9,7 +9,7 @@ hit() { # hit <regel> <erweiterter-regex>
   lines="$(grep -n -E -e "$2" "$tmp" | cut -d: -f1 | head -5 | tr '\n' ' ')"
   if [ -n "$lines" ]; then echo "  $name: $1 (Zeile $lines)"; fail=1; fi
 }
-hit "privater Schlüssel" '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+hit "privater Schlüssel" '-----BEGIN [A-Z ]*PRIVATE'' KEY-----'
 hit "Minisign-Geheimschlüssel" 'untrusted comment: .*secret key'
 hit "GitHub-Token" '(gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,})'
 hit "Cloud-/API-Schlüssel" '(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,}|xox[abprs]-[A-Za-z0-9-]{10,}|AIza[0-9A-Za-z_-]{30,})'

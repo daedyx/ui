@@ -1,0 +1,10 @@
+[package]
+name = "xtask"
+description = "Eigene Prüfwerkzeuge des Repos (Scan auf Geheimnisse und echte Daten, Ausnahmenzähler); nur Standardbibliothek"
+edition.workspace = true
+version.workspace = true
+license = "MIT"
+publish = false
+
+[lints]
+workspace = true
