@@ -30,3 +30,5 @@ mod other_tests;
 mod parts_tests;
 #[cfg(all(test, windows))]
 mod pipe_tests;
+#[cfg(test)]
+mod t4_tests;

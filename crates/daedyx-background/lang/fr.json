@@ -6,5 +6,11 @@
   "hintergrund.aufgabe.titel": "Tâche : {titel}",
   "hintergrund.aufgabe.neutral": "Rappel de tâche",
   "hintergrund.aufgabe.um": "À faire pour {zeit}",
-  "hintergrund.aufgabe.heute": "À faire aujourd’hui"
+  "hintergrund.aufgabe.heute": "À faire aujourd’hui",
+  "hintergrund.aufgabe.jetzt": "À faire maintenant",
+  "hintergrund.aufgabe.in_minuten": "À faire dans {n} minutes",
+  "hintergrund.aufgabe.in_einer_stunde": "À faire dans 1 heure",
+  "hintergrund.aufgabe.in_stunden": "À faire dans {n} heures",
+  "hintergrund.aufgabe.in_einem_tag": "À faire dans 1 jour",
+  "hintergrund.aufgabe.in_tagen": "À faire dans {n} jours"
 }

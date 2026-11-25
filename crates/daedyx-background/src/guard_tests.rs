@@ -22,7 +22,7 @@ fn ui_regeln_gelten_fuer_den_hintergrund() {
 #[test]
 fn alle_sprachen_haben_dieselben_hintergrund_schluessel() {
     let de = texts(Language::De);
-    assert_eq!(de.len(), 8);
+    assert_eq!(de.len(), 14, "8 aus Desk, 6 für den Vorlauf (Tasks T4)");
     for lang in [Language::En, Language::Fr] {
         let other = texts(lang);
         let a: Vec<&String> = de.entries().map(|(k, _)| k).collect();
