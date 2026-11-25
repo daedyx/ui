@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/daedyx-ui", "crates/daedyx-galerie"]
+members = ["crates/daedyx-ui", "crates/daedyx-tasks-ui", "crates/daedyx-galerie"]
 
 [workspace.package]
 version = "0.1.0"
@@ -16,6 +16,13 @@ serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
 tokio = { version = "=1.54.1", default-features = false, features = ["rt", "sync"] }
 png = "=0.18.1"
+# Für daedyx-tasks-ui (Tasks T1a), Fassungen wie in Desk und Tasks.
+chrono = { version = "=0.4.45", default-features = false, features = ["std", "clock"] }
+chrono-tz = "=0.10.4"
+rusqlite = "=0.37.0"
+# Aufgaben-Kern (privates Repository daedyx/core). Bis zum nächsten Kern-Tag der Stand von Zweig `paket-t1a`
+# (Schnelleingabe aus Desk), danach per Tag.
+daedyx-tasks-core = { git = "https://github.com/daedyx/core", rev = "4be4674d831dc86d9c645cd8a682635ce6693d06" }
 
 # Sicherheitsrahmen (SICHERHEIT.md, Anhang A). Ändern nur mit Björns Ja.
 [workspace.lints.rust]

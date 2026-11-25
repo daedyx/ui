@@ -7,7 +7,13 @@ targets = ["x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc", "x86_64-apple-da
 [advisories]
 yanked = "deny"
 unmaintained = "all"
-ignore = []
+# Mit daedyx-tasks-ui (Tasks T1a) über den Aufgaben-Kern im Baum; dieselben Ausnahmen wie Kern, Desk und Tasks.
+# Ja des Betreuers ausstehend (docs/SICHERHEIT-AUSNAHMEN.md).
+ignore = [
+  { id = "RUSTSEC-2026-0459", reason = "SQLite-Lücke nur mit präparierter DB-/WAL-Datei; die Apps bringen SQLCipher mit, hier nur Tests mit Speicher-Datenbank (wie Kern A-004)." },
+  { id = "RUSTSEC-2026-0543", reason = "chrono nicht mehr gepflegt, keine bekannte Lücke; Ersatz ist ein eigener Auftrag (wie Kern)." },
+  { id = "RUSTSEC-2026-0555", reason = "chrono-tz nicht mehr gepflegt, keine bekannte Lücke; Ersatz zusammen mit chrono (wie Kern)." },
+]
 
 [licenses]
 allow = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause",
@@ -27,4 +33,5 @@ deny = [
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-git = []
+# Eigener Aufgaben-Kern (daedyx-tasks-ui, Tasks T1a), wie in Desk und Tasks.
+allow-git = ["https://github.com/daedyx/core"]

@@ -1,0 +1,27 @@
+[package]
+name = "daedyx-tasks-ui"
+description = "Gemeinsame Aufgaben-Oberfläche der Daedyx-Apps (egui): Leiste, Liste, Detail, Board auf dem Aufgaben-Kern"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daedyx-ui = { path = "../daedyx-ui" }
+daedyx-tasks-core.workspace = true
+eframe.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+# Ohne Backend-Merkmal: SQLCipher oder SQLite stellt die App ein (wie im Kern).
+rusqlite.workspace = true
+
+[dev-dependencies]
+egui_kittest.workspace = true
+daedyx-ui = { path = "../daedyx-ui", features = ["lint"] }
+# Nur für den Testrahmen (Speicher-Datenbank); in den Apps gilt deren Backend.
+rusqlite = { workspace = true, features = ["bundled"] }

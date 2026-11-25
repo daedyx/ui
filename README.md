@@ -18,6 +18,8 @@ Rust mit egui 0.37, Stil „Daedyx Stil 1“. **Stand: erster Entwurf, nur Gerü
 | Brücke | `src/bridge/` | Kern-Aufrufe in einem Tokio-Thread, Antworten als Ereignisse, `request_repaint` |
 | Bildschirmfoto | `src/screenshot/` | `DAEDYX_SCREENSHOT=datei.png` schreibt nur das eigene Fenster |
 | Galerie | `crates/daedyx-galerie` | Beispiel-App mit allen Bausteinen |
+| Screenreader-Hilfen | `crates/daedyx-ui/src/a11y` | Bereich mit Rolle und Name, Auswahl, Baum-Ebene, Überschrift |
+| Aufgaben-Oberfläche | `crates/daedyx-tasks-ui` | Leiste, Liste, Detail, Board auf dem Aufgaben-Kern (aus Desk M6a); eigene Texte `aufgaben.*` in `lang/`, Testrahmen mit Speicher-Datenbank und fester Uhr; die App reicht ihre Datenbank über `TaskDb` herein |
 | Prüftests | `src/lint/` | keine festen Texte im Code, keine Farbwerte außerhalb der Tokens |
 
 ## Starten und prüfen

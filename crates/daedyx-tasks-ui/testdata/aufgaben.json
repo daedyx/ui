@@ -1,0 +1,38 @@
+{
+ "hinweis": "Erfundene Aufgaben für die Vorschau. Tage relativ zu heute (0 = heute, -1 = gestern).",
+ "listen": [
+  {
+   "name": "Haushalt",
+   "abschnitte": ["Diese Woche", "Später"],
+   "aufgaben": [
+    { "titel": "Wasserzähler ablesen", "tag": 0, "prioritaet": 2, "abschnitt": 0, "notiz": "Zählerstand ins Heft eintragen." },
+    { "titel": "Fahrrad zur Werkstatt bringen", "tag": -2, "prioritaet": 3, "abschnitt": 0 },
+    { "titel": "Blumen gießen", "tag": 1, "wiederholung": { "kind": "weekly", "interval": 1, "weekdays": [1, 4] }, "abschnitt": 0 },
+    { "titel": "Wochenmarkt", "tag": 2, "uhrzeit": "09:30", "erinnerung": 30, "abschnitt": 1,
+      "unter": ["Äpfel", "Käse", "Brot vom Bäcker"] },
+    { "titel": "Keller aufräumen", "abschnitt": 1, "prioritaet": 1 },
+    { "titel": "Glühbirne im Flur tauschen", "erledigt": true }
+   ]
+  },
+  {
+   "name": "Projekt Beispiel",
+   "abschnitte": ["Ideen", "In Arbeit", "Prüfen"],
+   "aufgaben": [
+    { "titel": "Entwurf für das Faltblatt", "tag": 3, "abschnitt": 1, "prioritaet": 2, "notiz": "Zwei Varianten, hell und dunkel." },
+    { "titel": "Rückmeldung von Clara Probe einholen", "tag": -1, "uhrzeit": "14:00", "abschnitt": 2 },
+    { "titel": "Druckerei anfragen", "abschnitt": 0 },
+    { "titel": "Titel für die Ausstellung finden", "abschnitt": 0 },
+    { "titel": "Monatsbericht", "tag": 7, "wiederholung": { "kind": "monthly", "interval": 1 }, "abschnitt": 1 }
+   ]
+  },
+  {
+   "name": "Lesen",
+   "abschnitte": [],
+   "aufgaben": [
+    { "titel": "Buch über Wolken zurückgeben", "tag": 10 },
+    { "titel": "Artikel über Gezeiten" },
+    { "titel": "Gedichte von Ben Muster", "erledigt": true }
+   ]
+  }
+ ]
+}
