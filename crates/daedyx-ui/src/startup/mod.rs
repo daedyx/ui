@@ -6,7 +6,7 @@ use crate::screenshot::Shot;
 use crate::theme::{self, look_ui};
 use crate::tokens::{AppAccent, TOKENS};
 use crate::widgets::fatal_state;
-use eframe::egui::{self, Frame, Margin, ViewportCommand};
+use eframe::egui::{self, Context, Frame, Margin, Theme, ViewportCommand};
 
 /// Inhalt und Zustand des Fensters.
 pub struct StartupError {
@@ -62,11 +62,22 @@ impl eframe::App for StartupError {
     }
 }
 
-/// Öffnet das Fenster und kehrt zurück, wenn es geschlossen ist. `window_title` steht in der Titelleiste.
+/// Richtet Schrift, Akzent und Farbschema ein. `theme`: `None` folgt dem System, sonst fest hell oder dunkel (wie
+/// die Einstellung der App, „hell und dunkel von Anfang an“).
+pub fn prepare(ctx: &Context, accent: AppAccent, theme: Option<Theme>) {
+    theme::install(ctx, accent);
+    if let Some(t) = theme {
+        ctx.set_theme(t);
+    }
+}
+
+/// Öffnet das Fenster und kehrt zurück, wenn es geschlossen ist. `window_title` steht in der Titelleiste; `theme`
+/// wie bei [`prepare`].
 pub fn run(
     app_id: &str,
     window_title: &str,
     accent: AppAccent,
+    theme: Option<Theme>,
     mut error: StartupError,
 ) -> Result<(), eframe::Error> {
     error.shot = Shot::from_env();
@@ -83,7 +94,7 @@ pub fn run(
         app_id,
         options,
         Box::new(move |cc| {
-            theme::install(&cc.egui_ctx, accent);
+            prepare(&cc.egui_ctx, accent, theme);
             Ok(Box::new(error))
         }),
     )
