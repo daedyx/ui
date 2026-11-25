@@ -17,6 +17,12 @@ pub fn check_id(task: &str) -> Id {
     Id::unique("aufgabe_haken").with(task)
 }
 
+/// Haken-Kreis einer Unteraufgabe im Detail: eigene Kennung, denn dieselbe Aufgabe steht auch als Zeile in der Liste
+/// (sonst doppelte Kennung im selben Bild).
+pub fn detail_check_id(task: &str) -> Id {
+    Id::unique("aufgabe_haken_detail").with(task)
+}
+
 pub fn priority_key(p: u8) -> &'static str {
     match p {
         1 => "aufgaben.prioritaet.niedrig",
@@ -48,16 +54,17 @@ pub fn spoken(tasks: &TasksUi, texts: &Texts, t: &Task) -> String {
     )
 }
 
-/// Haken-Kreis als eigenes Kontrollkästchen. `true`, wenn geklickt.
+/// Haken-Kreis als eigenes Kontrollkästchen mit der Kennung `id`. `true`, wenn geklickt.
 pub fn check(
     ui: &mut Ui,
     look: &Look,
     t: &Task,
-    center: eframe::egui::Pos2,
+    at: (eframe::egui::Pos2, Id),
     texts: &Texts,
 ) -> bool {
+    let (center, id) = at;
     let rect = Rect::from_center_size(center, vec2(CIRCLE, CIRCLE));
-    let resp = ui.interact(rect.expand(4.0), check_id(&t.id), Sense::click());
+    let resp = ui.interact(rect.expand(4.0), id, Sense::click());
     let done = t.done_at.is_some();
     let label = texts.tf("aufgaben.haken", &[("titel", &t.title)]);
     resp.widget_info(|| WidgetInfo::selected(Role::CheckBox, true, done, &label));
@@ -110,6 +117,23 @@ fn marks(ui: &mut Ui, tasks: &TasksUi, texts: &Texts, look: &Look, t: &Task, rec
     {
         let (dot, _) = child.allocate_exact_size(vec2(10.0, 10.0), Sense::hover());
         child.painter().circle_filled(dot.center(), 4.0, color);
+    }
+    // Zähler über alle Nachfahren (nur mit Baum, Desk zeigt ihn auf den Karten).
+    if tasks.features.deep()
+        && let Some((done, all)) = super::tree_model::progress(&tasks.items).get(&t.id)
+    {
+        let text = texts.tf(
+            "aufgaben.karte.unter",
+            &[
+                ("erledigt", &done.to_string()),
+                ("gesamt", &all.to_string()),
+            ],
+        );
+        child.label(
+            eframe::egui::RichText::new(text)
+                .small()
+                .color(look.p.text_muted),
+        );
     }
     for (on, key) in [
         (t.remind_minutes.is_some(), "aufgaben.marke.erinnerung"),

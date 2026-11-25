@@ -52,3 +52,59 @@ pub fn item_label(h: &Harness<'static, TasksUi>, start: &str) -> Option<String> 
         .filter_map(|n| n.accesskit_node().label())
         .find(|l| l.starts_with(start))
 }
+
+/// Wie [`harness`], aber mit allem, was Tasks einschaltet (`Features::TASKS`).
+pub fn harness_tasks(list: Option<(usize, bool)>) -> Harness<'static, TasksUi> {
+    let mut h = harness(list);
+    // Höher als der Desk-Rahmen: das Detail hat mit allen Feldern mehr Inhalt, kittest klickt am Bildschirmort.
+    h.set_size(eframe::egui::vec2(1100.0, 1400.0));
+    h.state_mut().features = crate::Features::TASKS;
+    h.run();
+    h
+}
+
+/// Klickt den Knopf `name` und lässt zwei Bilder laufen.
+pub fn click(h: &mut Harness<'static, TasksUi>, role: Role, name: &str) {
+    h.get_by_role_and_label(role, name).click();
+    h.run();
+    h.run();
+}
+
+/// Ersetzt den Inhalt des Felds `name` durch `text` und verlässt es mit Enter.
+pub fn type_into(h: &mut Harness<'static, TasksUi>, name: &str, text: &str) {
+    h.get_by_role_and_label(Role::TextInput, name).click();
+    h.run();
+    h.key_press_modifiers(eframe::egui::Modifiers::COMMAND, eframe::egui::Key::A);
+    h.key_press(eframe::egui::Key::Backspace);
+    h.run();
+    h.get_by_role_and_label(Role::TextInput, name)
+        .type_text(text);
+    h.run();
+    h.key_press(eframe::egui::Key::Enter);
+    h.run();
+    h.run();
+}
+
+/// Wählt die Aufgabe mit diesem Titel (Detail rechts).
+pub fn select(h: &mut Harness<'static, TasksUi>, title: &str) {
+    let id = h
+        .state()
+        .items
+        .iter()
+        .find(|t| t.title == title)
+        .map(|t| t.id.clone())
+        .unwrap();
+    h.state_mut().selected = Some(id);
+    h.run();
+    h.run();
+}
+
+/// Kennung der Aufgabe mit diesem Titel.
+pub fn id_of(h: &Harness<'static, TasksUi>, title: &str) -> String {
+    h.state()
+        .items
+        .iter()
+        .find(|t| t.title == title)
+        .map(|t| t.id.clone())
+        .unwrap()
+}

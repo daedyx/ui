@@ -3,6 +3,7 @@
 //! sofort durch den Aufgaben-Kern `daedyx-tasks-core` (kein „Speichern“). Texte über `lang/*.json` (Schlüssel
 //! `aufgaben.*`, die App führt sie in ihren eigenen Sprachdateien), Farben nur aus den Tokens von `daedyx-ui`.
 mod actions;
+mod actions_tree;
 mod board;
 mod board_card;
 mod board_column;
@@ -10,11 +11,18 @@ mod board_header;
 pub mod colors;
 mod confirm;
 mod detail;
+mod detail_alarms;
+mod detail_extras;
 mod detail_fields;
+mod detail_repeat;
+mod detail_tree;
 mod draft;
 mod due;
+mod features;
+mod kinds;
 mod layout;
 mod list_menu;
+mod list_sort;
 mod list_view;
 pub mod model;
 mod row_paint;
@@ -27,9 +35,13 @@ pub mod store;
 mod store_db;
 mod store_due;
 mod store_sections;
+mod store_tree;
 pub mod texts;
+pub mod tree_model;
 
 pub use draft::Draft;
+pub use features::Features;
+pub use kinds::{Ask, Mode, Sel};
 pub use layout::show;
 pub use start::start_with;
 
@@ -37,27 +49,6 @@ use daedyx_tasks_core::smart::View;
 use daedyx_tasks_core::types::{Section, Task, TaskList};
 use std::sync::Arc;
 pub use store::{Clock, TaskDb, TaskStore};
-
-/// Was links ausgewählt ist.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Sel {
-    View(View),
-    List(String),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Mode {
-    List,
-    Board,
-}
-
-/// Rückfrage vor dem Löschen.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Ask {
-    Task(String),
-    Section(String),
-    List(String),
-}
 
 pub struct TasksUi {
     store: Option<Arc<TaskStore>>,
@@ -80,6 +71,10 @@ pub struct TasksUi {
     pub draft: Draft,
     /// Umschalter Liste/Board im Listenkopf zeigen. Desk ja; Tasks nein, dort wechselt die Navigationsleiste.
     pub mode_switch: bool,
+    /// Was der Baustein in dieser App kann (Standard Desk).
+    pub features: Features,
+    /// Reihenfolge der obersten Aufgaben (nur mit `Features::sorting`).
+    pub sort: tree_model::SortMode,
     /// Schlüssel der letzten Fehlermeldung (`aufgaben.fehler.*`).
     pub error: Option<String>,
 }
@@ -104,6 +99,8 @@ impl TasksUi {
             renaming_list: None,
             draft: Draft::default(),
             mode_switch: true,
+            features: Features::DESK,
+            sort: tree_model::SortMode::Hand,
             error: None,
         };
         ui.refresh();
@@ -176,7 +173,11 @@ impl TasksUi {
 }
 
 #[cfg(test)]
+mod alarm_tests;
+#[cfg(test)]
 mod colors_tests;
+#[cfg(test)]
+mod deep_tests;
 #[cfg(test)]
 mod gap_tests;
 #[cfg(test)]
@@ -186,8 +187,14 @@ mod harness_tests;
 #[cfg(test)]
 mod model_tests;
 #[cfg(test)]
+mod repeat_tests;
+#[cfg(test)]
+mod sort_drag_tests;
+#[cfg(test)]
 mod store_tests;
 #[cfg(test)]
 mod switch_tests;
 #[cfg(test)]
 mod test_support;
+#[cfg(test)]
+mod tree_model_tests;

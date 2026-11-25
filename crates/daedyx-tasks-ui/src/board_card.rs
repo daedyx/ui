@@ -88,20 +88,14 @@ fn meta(tasks: &TasksUi, texts: &Texts, t: &Task) -> String {
     if t.priority > 0 {
         parts.push(texts.t(super::row_paint::priority_key(t.priority)));
     }
-    let kids: Vec<&Task> = tasks
-        .items
-        .iter()
-        .filter(|k| k.parent_id.as_deref() == Some(t.id.as_str()))
-        .collect();
-    if !kids.is_empty() {
-        let done = kids
-            .iter()
-            .filter(|k| k.done_at.is_some())
-            .count()
-            .to_string();
+    // Erledigt/gesamt über alle Nachfahren (bei einer Ebene wie bisher die direkten Unteraufgaben).
+    if let Some((done, all)) = super::tree_model::progress(&tasks.items).get(&t.id) {
         parts.push(texts.tf(
             "aufgaben.karte.unter",
-            &[("erledigt", &done), ("gesamt", &kids.len().to_string())],
+            &[
+                ("erledigt", &done.to_string()),
+                ("gesamt", &all.to_string()),
+            ],
         ));
     }
     parts.join(" · ")

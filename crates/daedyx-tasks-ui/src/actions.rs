@@ -10,7 +10,10 @@ use serde_json::{Map, Value};
 pub const ERROR_PREFIX: &str = "aufgaben.fehler.";
 
 impl TasksUi {
-    fn run<T>(&mut self, f: impl FnOnce(&TaskStore) -> Result<T, TaskError>) -> Option<T> {
+    pub(crate) fn run<T>(
+        &mut self,
+        f: impl FnOnce(&TaskStore) -> Result<T, TaskError>,
+    ) -> Option<T> {
         let result = f(self.store.as_deref()?);
         let out = match result {
             Ok(v) => {
@@ -52,20 +55,6 @@ impl TasksUi {
             .map(|(k, v)| ((*k).to_owned(), v.clone()))
             .collect();
         let _ = self.run(|s| s.update(id, &patch));
-    }
-
-    pub fn add_subtask(&mut self, parent: &str, title: &str) {
-        let Some(list) = self
-            .items
-            .iter()
-            .find(|t| t.id == parent)
-            .map(|t| t.list_id.clone())
-        else {
-            return;
-        };
-        let mut f = Map::new();
-        f.insert("title".into(), Value::String(title.to_owned()));
-        let _ = self.run(|s| s.create(&list, Some(parent), &f));
     }
 
     /// Nach der Rückfrage: löschen, was gefragt wurde.

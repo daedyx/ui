@@ -82,7 +82,14 @@ pub fn due(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
         let now = draft_due(tasks, texts, t);
         if now != (tasks.draft.date.clone(), tasks.draft.time.clone()) {
             match parse_due(tasks, texts) {
-                Some(fields) => tasks.set(&t.id, &fields),
+                Some(fields) => {
+                    let cleared = fields.first().is_some_and(|(_, v)| v.is_null());
+                    tasks.set(&t.id, &fields);
+                    // Ohne Fälligkeit gibt es keine Erinnerung (Vorlage TasksDeep: „Fälligkeit entfernen löscht sie“).
+                    if cleared && tasks.features.alarms_max > 1 && !tasks.draft.alarms.is_empty() {
+                        tasks.set_alarms(&t.id, &[]);
+                    }
+                }
                 None => tasks.error = Some("aufgaben.fehler.datum".into()),
             }
         }
@@ -116,7 +123,7 @@ pub fn priority(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     ui.add_space(f32::from(TOKENS.spacing.s2));
 }
 
-const REPEATS: [(Option<RepeatKind>, &str); 5] = [
+pub(crate) const REPEATS: [(Option<RepeatKind>, &str); 5] = [
     (None, "aufgaben.wiederholung.keine"),
     (Some(RepeatKind::Daily), "aufgaben.wiederholung.taeglich"),
     (
@@ -135,8 +142,8 @@ const REMINDERS: [(Option<i64>, &str); 5] = [
     (Some(1440), "aufgaben.erinnerung.tag"),
 ];
 
-/// Wiederholung und Erinnerung als Menüs (Erinnerung nur als Angabe; die Vorschau meldet nichts).
-pub fn repeat_and_reminder(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
+/// Wiederholung als Menü (Desk: nur die Art, Abstand 1).
+pub fn repeat_menu(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     let kind = t.repeat.as_ref().map(|r| r.kind.clone());
     let current = REPEATS
         .iter()
@@ -159,6 +166,10 @@ pub fn repeat_and_reminder(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &
             .unwrap_or(Value::Null);
         tasks.set(&t.id, &[("repeat_rule", rule)]);
     }
+}
+
+/// Eine Erinnerung als Menü (Desk; die Vorschau meldet nichts).
+pub fn reminder_menu(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     let current = REMINDERS
         .iter()
         .find(|(m, _)| *m == t.remind_minutes)

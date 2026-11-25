@@ -1,8 +1,8 @@
 //! Detailbereich rechts (300 px): Titel, Erledigt, Fälligkeit, Priorität, Wiederholung, Erinnerung,
 //! Notiz, Unteraufgaben, Löschen. Änderungen gelten sofort (Textfelder beim Verlassen oder Enter).
-use super::detail_fields::{draft_due, due, priority, repeat_and_reminder};
-use super::row_paint::check;
+use super::detail_fields::{draft_due, due, priority, reminder_menu, repeat_menu};
 use super::{Ask, Draft, TasksUi};
+use super::{detail_alarms, detail_extras, detail_repeat, detail_tree};
 use daedyx_tasks_core::types::Task;
 use daedyx_ui::a11y::{mark_heading, named_scope};
 use daedyx_ui::fonts;
@@ -10,9 +10,7 @@ use daedyx_ui::i18n::Texts;
 use daedyx_ui::theme::look_ui;
 use daedyx_ui::tokens::TOKENS;
 use daedyx_ui::widgets::{ButtonKind, MAX_INPUT_CHARS, button, empty_state, text_input};
-use eframe::egui::{
-    FontId, Key, RichText, ScrollArea, Sense, TextEdit, Ui, accesskit::Role, pos2, vec2,
-};
+use eframe::egui::{FontId, RichText, ScrollArea, TextEdit, Ui, accesskit::Role};
 use serde_json::json;
 
 /// Entwurf neu füllen, wenn eine andere Aufgabe gewählt wurde oder der Kern sie geändert hat
@@ -39,56 +37,19 @@ fn sync(tasks: &mut TasksUi, texts: &Texts, t: &Task) {
             time,
             subtask,
             seen,
+            depth: tasks.depth_of(&t.id),
+            alarms: tasks.alarms_of(&t.id),
+            ..Draft::default()
         };
     }
-}
-
-fn subtasks(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
-    let look = look_ui(ui);
-    let kids: Vec<Task> = tasks
-        .items
-        .iter()
-        .filter(|k| k.parent_id.as_deref() == Some(t.id.as_str()))
-        .cloned()
-        .collect();
-    let name = texts.t("aufgaben.unteraufgaben");
-    ui.label(RichText::new(&name).small().color(look.p.text_muted));
-    named_scope(ui, "aufgaben_unter", Role::List, &name, |ui| {
-        for k in &kids {
-            let (rect, _) =
-                ui.allocate_exact_size(vec2(ui.available_width(), 28.0), Sense::hover());
-            let center = pos2(rect.left() + 12.0, rect.center().y);
-            if check(ui, &look, k, center, texts) {
-                tasks.toggle(&k.id);
-            }
-            let color = if k.done_at.is_some() {
-                look.p.text_faint
-            } else {
-                look.p.text
-            };
-            let pos = pos2(rect.left() + 28.0, rect.center().y);
-            ui.painter().text(
-                pos,
-                eframe::egui::Align2::LEFT_CENTER,
-                &k.title,
-                FontId::proportional(TOKENS.font.steps.text.size),
-                color,
-            );
-        }
-    });
-    let r = text_input(
-        ui,
-        &mut tasks.draft.subtask,
-        &texts.t("aufgaben.unter.neu"),
-        &texts.t("aufgaben.unter.hinweis"),
-        None,
-    );
-    if r.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter)) {
-        let title = std::mem::take(&mut tasks.draft.subtask);
-        if !title.trim().is_empty() {
-            tasks.add_subtask(&t.id, &title);
-        }
-        r.request_focus();
+    if tasks.draft.repeat_seen != t.repeat {
+        let r = t.repeat.as_ref();
+        tasks.draft.interval = r.map(|r| r.interval.to_string()).unwrap_or_default();
+        tasks.draft.month_day = r
+            .and_then(|r| r.month_day)
+            .map(|d| d.to_string())
+            .unwrap_or_default();
+        tasks.draft.repeat_seen = t.repeat.clone();
     }
 }
 
@@ -100,6 +61,7 @@ fn body(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
         TOKENS.font.steps.text_bold.size,
         fonts::semibold_in(ui.ctx()),
     );
+    detail_tree::parent_link(ui, tasks, texts, t);
     let h = ui.label(RichText::new(&heading).font(font).color(look.p.text));
     mark_heading(ui, h.id, 2, &heading);
     ui.add_space(space);
@@ -130,7 +92,17 @@ fn body(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     due(ui, tasks, texts, t);
     ui.add_space(space);
     priority(ui, tasks, texts, t);
-    ui.horizontal_wrapped(|ui| repeat_and_reminder(ui, tasks, texts, t));
+    if tasks.features.full_repeat {
+        detail_repeat::show(ui, tasks, texts, t);
+    } else {
+        ui.horizontal_wrapped(|ui| repeat_menu(ui, tasks, texts, t));
+    }
+    if tasks.features.alarms_max > 1 {
+        detail_alarms::show(ui, tasks, texts, t);
+    } else {
+        ui.horizontal_wrapped(|ui| reminder_menu(ui, tasks, texts, t));
+    }
+    detail_extras::show(ui, tasks, texts, t);
     ui.add_space(space);
     let notes_label = texts.t("aufgaben.feld.notiz");
     ui.label(RichText::new(&notes_label).small().color(look.p.text_muted));
@@ -149,8 +121,8 @@ fn body(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
         tasks.set(&t.id, &[("notes", json!(value))]);
     }
     ui.add_space(space);
-    if t.parent_id.is_none() {
-        subtasks(ui, tasks, texts, t);
+    if tasks.draft.depth < tasks.features.max_depth || tasks.features.deep() {
+        detail_tree::subtasks(ui, tasks, texts, t);
         ui.add_space(space);
     }
     if button(ui, ButtonKind::Danger, &texts.t("aufgaben.detail.loeschen")).clicked() {

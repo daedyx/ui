@@ -44,6 +44,7 @@ pub fn header(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
             }
             super::list_menu::show(ui, tasks, texts);
         }
+        super::list_sort::show(ui, tasks, texts);
     });
     if let Some(key) = tasks.error.clone() {
         let text = texts.t(&key);
