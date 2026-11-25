@@ -6,5 +6,14 @@
   "hintergrund.aufgabe.titel": "Aufgabe: {titel}",
   "hintergrund.aufgabe.neutral": "Erinnerung an eine Aufgabe",
   "hintergrund.aufgabe.um": "Fällig um {zeit} Uhr",
-  "hintergrund.aufgabe.heute": "Heute fällig"
+  "hintergrund.aufgabe.heute": "Heute fällig",
+  "hintergrund.aufgabe.jetzt": "Jetzt fällig",
+  "hintergrund.aufgabe.in_einer_minute": "Fällig in 1 Minute",
+  "hintergrund.aufgabe.seit_einer_minute": "Seit 1 Minute fällig",
+  "hintergrund.aufgabe.seit_minuten": "Seit {n} Minuten fällig",
+  "hintergrund.aufgabe.in_minuten": "Fällig in {n} Minuten",
+  "hintergrund.aufgabe.in_einer_stunde": "Fällig in 1 Stunde",
+  "hintergrund.aufgabe.in_stunden": "Fällig in {n} Stunden",
+  "hintergrund.aufgabe.in_einem_tag": "Fällig in 1 Tag",
+  "hintergrund.aufgabe.in_tagen": "Fällig in {n} Tagen"
 }

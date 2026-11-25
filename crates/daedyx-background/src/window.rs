@@ -12,6 +12,8 @@ pub struct WindowState {
     /// „Beenden“ ist angefragt; die App sichert erst den Entwurf und ruft dann [`WindowState::finish_quit`]
     /// (Review int2 M-2).
     pub quit_wanted: bool,
+    /// Schließen beendet (Schalter „Im Infobereich weiterlaufen“ aus, Tasks T-F9). Standard: aus, also verstecken.
+    close_quits: bool,
     /// Versteckter Start: 0 = erstes Bild abwarten, 1 = jetzt verstecken.
     start_pending: Option<u8>,
 }
@@ -28,10 +30,24 @@ impl WindowState {
         vec![ViewportCommand::Visible(false)]
     }
 
-    /// Schließen-Knopf: verstecken statt beenden, außer „Beenden“ wurde gewählt.
+    /// „Im Infobereich weiterlaufen“: an (Standard) versteckt beim Schließen, aus beendet.
+    pub fn set_keep_running(&mut self, on: bool) {
+        self.close_quits = !on;
+    }
+
+    pub fn keep_running(&self) -> bool {
+        !self.close_quits
+    }
+
+    /// Schließen-Knopf: verstecken statt beenden, außer „Beenden“ wurde gewählt. Ohne Infobereich wird es ein
+    /// „Beenden“: Die App sichert zuerst den Entwurf und ruft dann [`WindowState::finish_quit`].
     pub fn on_close_requested(&mut self) -> Vec<ViewportCommand> {
         if self.quitting {
             return Vec::new();
+        }
+        if self.close_quits {
+            self.quit_wanted = true;
+            return vec![ViewportCommand::CancelClose];
         }
         let mut cmds = vec![ViewportCommand::CancelClose];
         cmds.extend(self.hide());

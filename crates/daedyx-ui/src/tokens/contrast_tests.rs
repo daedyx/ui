@@ -10,7 +10,7 @@ fn check(out: &mut Vec<String>, name: &str, fg: Color32, bg: Color32, min: f64) 
     }
 }
 
-fn pairs(p: &Palette<Color32>, mode: &str, out: &mut Vec<String>) {
+pub(crate) fn pairs(p: &Palette<Color32>, mode: &str, out: &mut Vec<String>) {
     let grounds = [
         ("fenster", p.window),
         ("flaeche", p.surface),

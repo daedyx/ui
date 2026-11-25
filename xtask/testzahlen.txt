@@ -1,9 +1,9 @@
 # Mindestzahl bestandener Tests je Testprogramm (cargo xtask testzahl, SICHERHEIT 5.7, Review T1a N-3).
 # Format: <Zahl> <Testprogramm wie im Protokoll von cargo test>. Mehr Tests sind immer erlaubt; die Zahl zu senken
 # oder eine Zeile zu löschen ist eine Lockerung und braucht das Ja des Betreuers (wie eine Ausnahme).
-17 unittests src/lib.rs (daedyx_background)
+22 unittests src/lib.rs (daedyx_background)
 5 unittests src/lib.rs (daedyx_build)
 3 unittests src/lib.rs (daedyx_sys)
-92 unittests src/lib.rs (daedyx_tasks_ui)
-62 unittests src/lib.rs (daedyx_ui)
+97 unittests src/lib.rs (daedyx_tasks_ui)
+66 unittests src/lib.rs (daedyx_ui)
 64 unittests src/main.rs (xtask)

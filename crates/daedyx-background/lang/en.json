@@ -6,5 +6,14 @@
   "hintergrund.aufgabe.titel": "Task: {titel}",
   "hintergrund.aufgabe.neutral": "Task reminder",
   "hintergrund.aufgabe.um": "Due at {zeit}",
-  "hintergrund.aufgabe.heute": "Due today"
+  "hintergrund.aufgabe.heute": "Due today",
+  "hintergrund.aufgabe.jetzt": "Due now",
+  "hintergrund.aufgabe.in_einer_minute": "Due in 1 minute",
+  "hintergrund.aufgabe.seit_einer_minute": "Overdue by 1 minute",
+  "hintergrund.aufgabe.seit_minuten": "Overdue by {n} minutes",
+  "hintergrund.aufgabe.in_minuten": "Due in {n} minutes",
+  "hintergrund.aufgabe.in_einer_stunde": "Due in 1 hour",
+  "hintergrund.aufgabe.in_stunden": "Due in {n} hours",
+  "hintergrund.aufgabe.in_einem_tag": "Due in 1 day",
+  "hintergrund.aufgabe.in_tagen": "Due in {n} days"
 }

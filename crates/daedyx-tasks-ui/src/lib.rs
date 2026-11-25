@@ -19,6 +19,7 @@ mod detail_fields;
 mod detail_repeat;
 mod detail_tree;
 mod draft;
+mod draft_commit;
 mod due;
 mod features;
 mod kinds;
@@ -149,6 +150,8 @@ mod board_more_tests;
 mod colors_tests;
 #[cfg(test)]
 mod deep_tests;
+#[cfg(test)]
+mod draft_commit_tests;
 #[cfg(test)]
 mod due_tests;
 #[cfg(test)]

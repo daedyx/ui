@@ -60,6 +60,6 @@ impl ShadowPair<Color32> {
 }
 
 #[cfg(test)]
-mod contrast_tests;
+pub(crate) mod contrast_tests;
 #[cfg(test)]
 mod tests;

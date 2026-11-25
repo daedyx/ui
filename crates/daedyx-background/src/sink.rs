@@ -9,6 +9,12 @@ use std::sync::{Arc, OnceLock};
 pub enum NoticeKind {
     Event,
     Task,
+    /// Aufgabe mit Restzeit (Tasks): „Fällig in 10 Minuten“ statt einer Uhrzeit; `time` bleibt leer.
+    /// `minutes_until` ist Fälligkeit minus jetzt, negativ bei schon fälligen (nachgeholten) Erinnerungen
+    /// (Review T4, N4-1).
+    TaskLead {
+        minutes_until: i64,
+    },
 }
 
 /// Eine fällige Erinnerung (Titel aus den Vorschau-Daten, Zeit schon in Ortszeit).

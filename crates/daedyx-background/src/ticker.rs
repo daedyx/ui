@@ -25,6 +25,17 @@ pub trait Jobs: Send + Sync {
 /// Titel und Text der Benachrichtigung (aus der Sprachdatei). Ohne `show_titles` neutral, nur mit der Uhrzeit.
 pub fn render(texts: &Texts, n: &Notice, show_titles: bool) -> (String, String) {
     let (title, at, none) = match n.kind {
+        NoticeKind::TaskLead { minutes_until } => {
+            let title = if show_titles {
+                "hintergrund.aufgabe.titel"
+            } else {
+                "hintergrund.aufgabe.neutral"
+            };
+            return (
+                texts.tf(title, &[("titel", &n.title)]),
+                lead_text(texts, minutes_until),
+            );
+        }
         NoticeKind::Event => (
             if show_titles {
                 "hintergrund.termin.titel"
@@ -50,6 +61,54 @@ pub fn render(texts: &Texts, n: &Notice, show_titles: bool) -> (String, String) 
         texts.tf(at, &[("zeit", &n.time)])
     };
     (texts.tf(title, &[("titel", &n.title)]), body)
+}
+
+/// Ganzzahlige Division mit Runden zur Hälfte nach oben (wie `Math.round` der Tauri-Fassung), ohne Überlauf.
+fn rounded(m: i64, unit: i64) -> i64 {
+    let whole = m.checked_div(unit).unwrap_or(0);
+    let rest = m.checked_rem(unit).unwrap_or(0);
+    if rest.saturating_mul(2) >= unit {
+        whole.saturating_add(1)
+    } else {
+        whole
+    }
+}
+
+/// Text zur Restzeit einer Erinnerung (Tasks): seit n Minuten, jetzt, oder Minuten, Stunden, Tage bis zur Fälligkeit.
+fn lead_text(texts: &Texts, m: i64) -> String {
+    const HOUR: i64 = 60;
+    const DAY: i64 = 1440;
+    const TWO_HOURS: i64 = 120;
+    const TWO_DAYS: i64 = 2880;
+    let n = |v: i64| v.to_string();
+    if m == -1 {
+        texts.t("hintergrund.aufgabe.seit_einer_minute")
+    } else if m < 0 {
+        texts.tf(
+            "hintergrund.aufgabe.seit_minuten",
+            &[("n", &n(m.saturating_neg()))],
+        )
+    } else if m == 0 {
+        texts.t("hintergrund.aufgabe.jetzt")
+    } else if m == 1 {
+        texts.t("hintergrund.aufgabe.in_einer_minute")
+    } else if m < HOUR {
+        texts.tf("hintergrund.aufgabe.in_minuten", &[("n", &n(m))])
+    } else if m < TWO_HOURS {
+        texts.t("hintergrund.aufgabe.in_einer_stunde")
+    } else if m < DAY {
+        texts.tf(
+            "hintergrund.aufgabe.in_stunden",
+            &[("n", &n(rounded(m, HOUR)))],
+        )
+    } else if m < TWO_DAYS {
+        texts.t("hintergrund.aufgabe.in_einem_tag")
+    } else {
+        texts.tf(
+            "hintergrund.aufgabe.in_tagen",
+            &[("n", &n(rounded(m, DAY)))],
+        )
+    }
 }
 
 /// Ein Durchgang mit Benachrichtigungen und Meldungen an die Oberfläche.
