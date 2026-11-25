@@ -1,5 +1,9 @@
 //! Thema: füllt `egui::Visuals` und `egui::Style` aus den Tokens (hell und dunkel) und merkt sich,
 //! welche App zeichnet (Akzentfarbe). Abbildung nach `tokens.json`, Abschnitt `abbildung_egui`.
+mod tuning;
+
+pub use tuning::{BLACK_MAX, DarkTuning, PRESETS, Preset, WHITE_MAX};
+
 use crate::fonts;
 use crate::tokens::{Accent, AppAccent, Palette, ShadowSpec, TOKENS, palette};
 use eframe::egui::{
@@ -11,12 +15,21 @@ use eframe::egui::{
 #[derive(Debug, Clone, Copy)]
 pub struct Look {
     pub dark: bool,
-    pub p: &'static Palette<Color32>,
+    /// Die Palette (im Dunkelmodus mit der Feinstellung, falls gesetzt).
+    pub p: Palette<Color32>,
     pub accent: &'static Accent<Color32>,
 }
 
 fn accent_id() -> egui::Id {
     egui::Id::unique("daedyx-ui-accent")
+}
+
+fn tuning_id() -> egui::Id {
+    egui::Id::unique("daedyx-ui-dark-tuning")
+}
+
+fn tuned_palette_id() -> egui::Id {
+    egui::Id::unique("daedyx-ui-dark-tuned-palette")
 }
 
 fn radius(value: u16) -> CornerRadius {
@@ -39,7 +52,11 @@ fn shadow(spec: &ShadowSpec<Color32>) -> Shadow {
 
 /// Visuals für hell oder dunkel und eine App.
 pub fn visuals(dark: bool, app: AppAccent) -> Visuals {
-    let p = palette(dark);
+    visuals_with(palette(dark), dark, app)
+}
+
+/// Visuals aus einer Palette (die Feinstellung des Dunkelmodus liefert eine abgeleitete).
+pub fn visuals_with(p: &Palette<Color32>, dark: bool, app: AppAccent) -> Visuals {
     let a = p.accent(app);
     let mut v = if dark {
         Visuals::dark()
@@ -98,8 +115,13 @@ pub fn visuals(dark: bool, app: AppAccent) -> Visuals {
 
 /// Vollständiger Stil (Visuals, Abstände, Schriftstufen) für hell oder dunkel.
 pub fn style(dark: bool, app: AppAccent) -> Style {
+    style_with(palette(dark), dark, app)
+}
+
+/// Stil aus einer Palette.
+pub fn style_with(p: &Palette<Color32>, dark: bool, app: AppAccent) -> Style {
     let mut s = Style {
-        visuals: visuals(dark, app),
+        visuals: visuals_with(p, dark, app),
         ..Style::default()
     };
     let sp = &TOKENS.spacing;
@@ -137,13 +159,43 @@ pub fn accent_of(ctx: &Context) -> AppAccent {
     ctx.data(|d| d.get_temp(accent_id())).unwrap_or_default()
 }
 
+/// Feinstellung des Dunkelmodus setzen (`None`: Farben der Tokens). Gilt sofort für den dunklen Stil und für
+/// [`look`]; das helle Thema bleibt unverändert.
+pub fn set_dark_tuning(ctx: &Context, tuning: Option<DarkTuning>) {
+    let app = accent_of(ctx);
+    let p = tuning.map_or(*palette(true), |t| t.palette());
+    ctx.data_mut(|d| match tuning {
+        Some(t) => {
+            d.insert_temp(tuning_id(), t);
+            // Die abgeleitete Palette einmal rechnen, nicht bei jedem `look`.
+            d.insert_temp(tuned_palette_id(), p);
+        }
+        None => {
+            d.remove::<DarkTuning>(tuning_id());
+            d.remove::<Palette<Color32>>(tuned_palette_id());
+        }
+    });
+    ctx.set_style_of(Theme::Dark, style_with(&p, true, app));
+}
+
+/// Die gesetzte Feinstellung des Dunkelmodus.
+pub fn dark_tuning(ctx: &Context) -> Option<DarkTuning> {
+    ctx.data(|d| d.get_temp(tuning_id()))
+}
+
 /// Farben für hell oder dunkel und die gemerkte App.
 pub fn look(ctx: &Context, dark: bool) -> Look {
-    let p = palette(dark);
+    let base = palette(dark);
+    let tuned = if dark {
+        ctx.data(|d| d.get_temp::<Palette<Color32>>(tuned_palette_id()))
+    } else {
+        None
+    };
+    let p = tuned.unwrap_or(*base);
     Look {
         dark,
         p,
-        accent: p.accent(accent_of(ctx)),
+        accent: base.accent(accent_of(ctx)),
     }
 }
 
@@ -154,3 +206,5 @@ pub fn look_ui(ui: &Ui) -> Look {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tuning_tests;
