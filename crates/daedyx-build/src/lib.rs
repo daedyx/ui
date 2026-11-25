@@ -18,4 +18,6 @@ pub use link::{COMMON_CONTROLS_6, Symbol, windows_app};
 #[cfg(test)]
 mod guard_tests;
 #[cfg(test)]
+mod installer_tests;
+#[cfg(test)]
 mod res_tests;

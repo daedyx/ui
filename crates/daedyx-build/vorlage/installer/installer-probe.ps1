@@ -50,9 +50,16 @@ function Gone($tag) {
     Check "$tag keine Prozesse" ((Processes) -eq 0)
 }
 
+# Schutz der echten App (Review T1b N-4): Solange die Vorlage app-vorschau heißt, nimmt die Probe nur Kennungen einer
+# Vorschau an. Sie läuft vor jedem Schreibzugriff, wie die Abbrüche darunter.
+if (-not $Product.EndsWith(" Vorschau") -or -not $Aumid.EndsWith(".vorschau")) {
+    "Abbruch: Produkt muss auf ' Vorschau' und App-Kennung auf '.vorschau' enden. Die Probe fasst nur Vorschauen an."
+    exit 2
+}
 if (-not (Test-Path $Setup)) { "Setup fehlt: $Setup"; exit 2 }
-if ((Test-Path $uninstKey) -or (Test-Path $dirKey) -or ($null -ne (RunValue))) {
-    "Abbruch: Die Vorschau ist bereits installiert oder hat einen Autostart-Wert. Die Probe fasst sie nicht an."
+# Alles, was Deinstallation und Probe am Ende löschen, muss vorher fehlen; sonst gehört es einer anderen Installation.
+if ((Test-Path $uninstKey) -or (Test-Path $dirKey) -or ($null -ne (RunValue)) -or (Test-Path $aumidKey) -or (Test-Path $lnk)) {
+    "Abbruch: Die Vorschau ist bereits installiert (Uninstall-Eintrag, Ordner-Merkschlüssel, Autostart-Wert, App-Kennung oder Verknüpfung). Die Probe fasst sie nicht an."
     exit 2
 }
 "Setup KB=" + [math]::Round((Get-Item $Setup).Length / 1KB) + " Ordner=Wegwerf-Ordner unter TEMP"

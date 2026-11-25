@@ -1,5 +1,5 @@
-//! Betriebssystem-Aufrufe der Daedyx-Apps (aus `desk-sys`, Tasks T1b). Das ist die einzige Stelle mit `unsafe` (SICHERHEIT.md 2.1);
-//! jede Stelle trägt eine `// SAFETY:`-Begründung.
+//! Betriebssystem-Aufrufe der Daedyx-Apps (aus `desk-sys`, Tasks T1b). In `daedyx/ui` und Desk ist das die einzige
+//! Stelle mit `unsafe` (SICHERHEIT.md 2.1); jede Stelle trägt eine `// SAFETY:`-Begründung.
 use std::path::Path;
 
 mod process;
