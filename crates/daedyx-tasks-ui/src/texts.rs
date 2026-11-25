@@ -16,3 +16,10 @@ pub fn source(language: Language) -> &'static str {
 pub fn texts(language: Language) -> Texts {
     Texts::from_json(source(language)).unwrap_or_default()
 }
+
+/// Quellordner dieses Crates, damit der Wächter der App (feste Texte, Farben, Schlüssel) auch hier prüft. Nur mit
+/// dem Merkmal `lint` (Entwicklungs-Abhängigkeit), nie im fertigen Programm.
+#[cfg(feature = "lint")]
+pub fn source_dir() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src")
+}

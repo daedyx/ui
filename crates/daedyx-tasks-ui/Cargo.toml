@@ -9,6 +9,10 @@ license.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Quellordner für den Wächter der App (`texts::source_dir`); nur als Entwicklungs-Abhängigkeit.
+lint = []
+
 [dependencies]
 daedyx-ui = { path = "../daedyx-ui" }
 daedyx-tasks-core.workspace = true

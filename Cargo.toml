@@ -22,7 +22,7 @@ chrono-tz = "=0.10.4"
 rusqlite = "=0.37.0"
 # Aufgaben-Kern (privates Repository daedyx/core). Bis zum nächsten Kern-Tag der Stand von Zweig `paket-t1a`
 # (Schnelleingabe aus Desk), danach per Tag.
-daedyx-tasks-core = { git = "https://github.com/daedyx/core", rev = "4be4674d831dc86d9c645cd8a682635ce6693d06" }
+daedyx-tasks-core = { git = "https://github.com/daedyx/core", rev = "92582e1d6fb8be49873157231170e6dd8c077963" }
 
 # Sicherheitsrahmen (SICHERHEIT.md, Anhang A). Ändern nur mit Björns Ja.
 [workspace.lints.rust]

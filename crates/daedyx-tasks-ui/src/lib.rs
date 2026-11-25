@@ -23,6 +23,7 @@ mod sidebar;
 mod sidebar_lists;
 mod start;
 pub mod store;
+mod store_db;
 mod store_due;
 mod store_sections;
 pub mod texts;

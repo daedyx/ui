@@ -12,25 +12,9 @@ use daedyx_tasks_core::types::{Task, TaskList};
 use daedyx_tasks_core::{TaskError, store};
 use rusqlite::Connection;
 use serde_json::{Map, Value};
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::Mutex;
 
-/// Uhr der Oberfläche: echte Zeit, in Tests fest.
-#[derive(Debug, Clone, Copy)]
-pub enum Clock {
-    System,
-    Fixed(NaiveDateTime),
-}
-
-/// Wo die Datenbank liegt; die App entscheidet. Eine vergiftete Sperre wird übernommen statt abzustürzen.
-pub trait TaskDb: Send + Sync {
-    fn lock(&self) -> MutexGuard<'_, Connection>;
-}
-
-impl TaskDb for Mutex<Connection> {
-    fn lock(&self) -> MutexGuard<'_, Connection> {
-        Mutex::lock(self).unwrap_or_else(PoisonError::into_inner)
-    }
-}
+pub use crate::store_db::{Clock, TaskDb};
 
 /// Abhaken: Standard ist der Kern; Desk setzt seine Fassung mit zweiter Regelprüfung ein.
 pub type ToggleFn = fn(&Connection, &str, u64, Tz) -> Result<Task, TaskError>;
