@@ -12,6 +12,7 @@ mod confirm;
 mod detail;
 mod detail_fields;
 mod draft;
+mod draft_commit;
 mod due;
 mod layout;
 mod list_menu;
@@ -177,6 +178,8 @@ impl TasksUi {
 
 #[cfg(test)]
 mod colors_tests;
+#[cfg(test)]
+mod draft_commit_tests;
 #[cfg(test)]
 mod gap_tests;
 #[cfg(test)]
