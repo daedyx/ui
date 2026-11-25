@@ -27,6 +27,11 @@ fn plus_karte_legt_die_karte_in_ihrer_spalte_an_und_bleibt_offen() {
     assert_eq!(t.section_id, later);
     assert_eq!(t.priority, 1, "Schnelleingabe gilt auch hier");
     let _ = h.get_by_role_and_label(Role::TextInput, "Neue Karte in „Später“");
+    assert_eq!(
+        h.query_all_by_label("Sortierung: von Hand").count(),
+        0,
+        "keine Sortierung im Board"
+    );
     h.key_press(eframe::egui::Key::Escape);
     h.run();
     h.run();

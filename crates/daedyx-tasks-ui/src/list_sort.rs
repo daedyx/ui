@@ -7,7 +7,9 @@ use daedyx_ui::widgets::{MenuItem, menu_button};
 use eframe::egui::Ui;
 
 pub fn show(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
-    if !tasks.features.sorting || !tasks.search.trim().is_empty() {
+    // Im Board gilt die Reihenfolge der Spalten (von Hand); die Sortierung betrifft nur die Liste.
+    let board = tasks.mode == super::Mode::Board && tasks.list_id().is_some();
+    if !tasks.features.sorting || !tasks.search.trim().is_empty() || board {
         return;
     }
     ui.add_space(f32::from(daedyx_ui::tokens::TOKENS.spacing.s2));
