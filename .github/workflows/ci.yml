@@ -75,9 +75,12 @@ jobs:
           CORE_READ_TOKEN: ${{ secrets.CORE_READ_TOKEN }}
         run: |
           if (-not $env:CORE_READ_TOKEN) { throw "Secret CORE_READ_TOKEN fehlt (Lesezugriff auf daedyx/core)" }
-          $env:GIT_CONFIG_COUNT = '1'
+          # Kein Anmeldespeicher: der Windows-Runner legte das Token sonst im Credential-Manager ab (Review T1a N2-1).
+          $env:GIT_CONFIG_COUNT = '2'
           $env:GIT_CONFIG_KEY_0 = 'url.https://x-access-token:' + $env:CORE_READ_TOKEN + '@github.com/daedyx/core.insteadOf'
           $env:GIT_CONFIG_VALUE_0 = 'https://github.com/daedyx/core'
+          $env:GIT_CONFIG_KEY_1 = 'credential.helper'
+          $env:GIT_CONFIG_VALUE_1 = ''
           $env:CARGO_NET_GIT_FETCH_WITH_CLI = 'true'
           cargo fetch --locked
           if ($LASTEXITCODE -ne 0) { throw "Abruf der Abhängigkeiten fehlgeschlagen" }
@@ -128,7 +131,8 @@ jobs:
         run: |
           test -n "$CORE_READ_TOKEN" || { echo "Secret CORE_READ_TOKEN fehlt"; exit 1; }
           git config --global "url.https://x-access-token:${CORE_READ_TOKEN}@github.com/daedyx/core.insteadOf" https://github.com/daedyx/core
-          CARGO_NET_GIT_FETCH_WITH_CLI=true cargo fetch --locked
+          # Kein Anmeldespeicher für das Token (Review T1a N2-1), wie im Windows-Schritt.
+          GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= CARGO_NET_GIT_FETCH_WITH_CLI=true cargo fetch --locked
           git config --global --unset-all "url.https://x-access-token:${CORE_READ_TOKEN}@github.com/daedyx/core.insteadOf"
       - run: cargo deny --locked --offline check advisories bans licenses sources
       - run: cargo audit --deny warnings
