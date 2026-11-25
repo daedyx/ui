@@ -156,7 +156,9 @@ Section "${PRODUCT}" SecMain
 SectionEnd
 
 Section "Uninstall"
-  ; App beenden und ihre Spuren außerhalb des Ordners entfernen (Autostart-Wert, App-Kennung, Benachrichtigungen).
+  ; App beenden und ihre Spuren außerhalb des Ordners entfernen: `--cleanup` löscht Autostart-Wert, App-Kennung und
+  ; Benachrichtigungen. Eine VORSCHAU-Fassung entfernt dabei auch ihren Datenordner und Tresor-Eintrag (nur erfundene
+  ; Daten, nur Vorschau-Namen; Tasks T5-1). Die PRODUKT-Fassung lässt Nutzerdaten und Tresor-Eintrag immer stehen.
   ${If} ${FileExists} "$INSTDIR\${EXE}"
     nsExec::Exec '"$INSTDIR\${EXE}" --quit-running'
     Pop $0
@@ -174,5 +176,6 @@ Section "Uninstall"
   DeleteRegKey HKCU "${UNINSTKEY}"
   DeleteRegKey HKCU "${AUMIDKEY}"
   DeleteRegKey HKCU "${DIRKEY}"
-  ; Nutzerdaten der App (eigener Ordner unter %APPDATA%) werden bewusst NICHT gelöscht.
+  ; Das Setup selbst löscht keinen Datenordner unter %APPDATA%: Bei der Vorschau erledigt das `--cleanup` oben (erfundene
+  ; Daten), beim Produkt bleiben die Nutzerdaten bewusst erhalten.
 SectionEnd
