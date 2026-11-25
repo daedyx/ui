@@ -1,0 +1,10 @@
+{
+  "hintergrund.termin.titel": "Termin: {titel}",
+  "hintergrund.termin.neutral": "Erinnerung an einen Termin",
+  "hintergrund.termin.um": "Beginnt um {zeit} Uhr",
+  "hintergrund.termin.ganztags": "Ganztägig",
+  "hintergrund.aufgabe.titel": "Aufgabe: {titel}",
+  "hintergrund.aufgabe.neutral": "Erinnerung an eine Aufgabe",
+  "hintergrund.aufgabe.um": "Fällig um {zeit} Uhr",
+  "hintergrund.aufgabe.heute": "Heute fällig"
+}

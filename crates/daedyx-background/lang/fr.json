@@ -1,0 +1,10 @@
+{
+  "hintergrund.termin.titel": "Événement : {titel}",
+  "hintergrund.termin.neutral": "Rappel d’événement",
+  "hintergrund.termin.um": "Commence à {zeit}",
+  "hintergrund.termin.ganztags": "Toute la journée",
+  "hintergrund.aufgabe.titel": "Tâche : {titel}",
+  "hintergrund.aufgabe.neutral": "Rappel de tâche",
+  "hintergrund.aufgabe.um": "À faire pour {zeit}",
+  "hintergrund.aufgabe.heute": "À faire aujourd’hui"
+}

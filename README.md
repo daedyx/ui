@@ -20,6 +20,9 @@ Rust mit egui 0.37, Stil „Daedyx Stil 1“. **Stand: erster Entwurf, nur Gerü
 | Galerie | `crates/daedyx-galerie` | Beispiel-App mit allen Bausteinen |
 | Screenreader-Hilfen | `crates/daedyx-ui/src/a11y` | Bereich mit Rolle und Name, Auswahl, Baum-Ebene, Überschrift |
 | Aufgaben-Oberfläche | `crates/daedyx-tasks-ui` | Leiste, Liste, Detail, Board auf dem Aufgaben-Kern (aus Desk M6a); eigene Texte `aufgaben.*` in `lang/`, Testrahmen mit Speicher-Datenbank und fester Uhr; die App reicht ihre Datenbank über `TaskDb` herein |
+| Hintergrund | `crates/daedyx-background` | Schließen = verstecken, Takt mit Benachrichtigungen, Infobereich, Autostart, Einzelinstanz (Pipe), Befehlszeile, Aufräumen (aus Desk M7b); Kennungen gibt die App als `AppIds` herein |
+| Betriebssystem | `crates/daedyx-sys` | freier Plattenplatz, Programm mit Zeitgrenze starten (Startprobe); einzige Stelle mit `unsafe` (aus `desk-sys`) |
+| Bau-Helfer | `crates/daedyx-build` | für `build.rs`: Manifest mit Common Controls 6, Programmsymbol ohne `rc.exe`; Installer-Vorlage (NSIS, Bauskript, Probe mit 28 Prüfungen) in `vorlage/installer` |
 | Prüftests | `src/lint/` | keine festen Texte im Code, keine Farbwerte außerhalb der Tokens |
 
 ## Starten und prüfen

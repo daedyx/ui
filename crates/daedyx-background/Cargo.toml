@@ -1,0 +1,31 @@
+[package]
+name = "daedyx-background"
+version.workspace = true
+description = "Hintergrundbetrieb der egui-Apps: Fenster verstecken, Takt, Benachrichtigung, Infobereich, Autostart, Einzelinstanz (aus Desk, Tasks T1b)"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Quellordner für den Wächter der App (nur als Entwicklungs-Abhängigkeit).
+lint = []
+
+[dependencies]
+daedyx-ui = { path = "../daedyx-ui" }
+eframe = { workspace = true }
+# Pipe der Einzelinstanz (Laufzeit mit einem Arbeits-Thread).
+tokio = { workspace = true, features = ["rt-multi-thread", "time", "net", "io-util"] }
+tray-icon = { version = "=0.25.1", default-features = false }
+
+[target.'cfg(windows)'.dependencies]
+# Windows-Benachrichtigungen, Autostart und App-Kennung (nur HKCU). Fassungen wie in Desk.
+tauri-winrt-notification = "=0.8.1"
+winreg = "=0.56.0"
+windows = { version = "=0.62.2", features = ["UI_Notifications", "Data_Xml_Dom", "Foundation_Collections"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
+daedyx-ui = { path = "../daedyx-ui", features = ["lint"] }

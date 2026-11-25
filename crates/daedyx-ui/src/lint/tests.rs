@@ -117,4 +117,11 @@ fn nur_benannte_crates_mit_eigenem_waechter_werden_uebersprungen() {
             .any(|f| f.to_string_lossy().contains("daedyx-galerie")),
         "Galerie wird geprüft"
     );
+    // Tasks T1b: daedyx-sys hat keine Texte und wird mit denen von daedyx-ui geprüft.
+    assert!(
+        files
+            .iter()
+            .any(|f| f.to_string_lossy().contains("daedyx-sys")),
+        "daedyx-sys wird geprüft"
+    );
 }

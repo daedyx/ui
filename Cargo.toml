@@ -1,6 +1,14 @@
 [workspace]
 resolver = "3"
-members = ["crates/daedyx-ui", "crates/daedyx-tasks-ui", "crates/daedyx-galerie", "xtask"]
+members = [
+  "crates/daedyx-ui",
+  "crates/daedyx-tasks-ui",
+  "crates/daedyx-background",
+  "crates/daedyx-sys",
+  "crates/daedyx-build",
+  "crates/daedyx-galerie",
+  "xtask",
+]
 
 [workspace.package]
 version = "0.1.0"

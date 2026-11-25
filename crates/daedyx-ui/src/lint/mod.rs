@@ -15,7 +15,7 @@ const FILE_ENDINGS: &[&str] = &[".json", ".rs", ".png", ".ttf", ".ttc", ".toml",
 
 /// Crates mit eigenen Sprachdateien und eigenem Wächter-Test (`src/guard_tests.rs`, geprüft in den Tests). Nur diese
 /// überspringt der Workspace-Wächter; jedes andere Crate prüft er mit den Texten von daedyx-ui (Review T1a N-4).
-pub const OWN_GUARD: [&str; 1] = ["daedyx-tasks-ui"];
+pub const OWN_GUARD: [&str; 3] = ["daedyx-tasks-ui", "daedyx-background", "daedyx-build"];
 
 /// Quelltexte aller Crates im Workspace, ohne Testdateien, ohne diesen Prüfordner und ohne [`OWN_GUARD`].
 pub fn source_files() -> Vec<PathBuf> {

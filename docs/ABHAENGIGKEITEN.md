@@ -1,6 +1,8 @@
 # Abhängigkeiten
 
-Jede direkte Abhängigkeit steht hier mit Zweck, Lizenz und Grund. Versionen sind in `Cargo.toml`
+Jede direkte Abhängigkeit steht hier mit Zweck, Lizenz und Grund. Seit Tasks T1b kommen die Bibliotheken des
+Hintergrundbetriebs dazu (aus Desk, gleiche Fassungen, nichts heruntergeladen); `daedyx-sys` und `daedyx-build` haben
+keine Abhängigkeiten. Versionen sind in `Cargo.toml`
 festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 
 | Crate | Version | Lizenz | Wofür | Warum diese |
@@ -13,6 +15,11 @@ festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 | daedyx-tasks-core | Tag `tasks-core-v0.2.3` | MIT | Aufgaben-Kern für `daedyx-tasks-ui` | eigenes Repo `daedyx/core`; dieselbe Fassung wie in Desk und Tasks |
 | chrono / chrono-tz | 0.4.45 / 0.10.4 | MIT OR Apache-2.0 / MIT OR Apache-2.0 | Fälligkeiten, Zeitzonen in `daedyx-tasks-ui` | schon über den Kern im Baum, gleiche Fassung wie Desk |
 | rusqlite | 0.37.0 | MIT | Datenbank-Verbindung des Kerns in `daedyx-tasks-ui` | schon über den Kern im Baum; Backend (`bundled`) nur in Tests, die App wählt SQLCipher |
+| tray-icon | 0.25.1 | MIT OR Apache-2.0 | Symbol im Infobereich mit Menü (`daedyx-background`, aus Desk M7b) | Fassung wie in Desk; ohne Standard-Merkmale |
+| tauri-winrt-notification | 0.8.1 | MIT OR Apache-2.0 | Windows-Benachrichtigungen (`daedyx-background`, nur Windows) | Fassung wie in Desk (Spike S5) |
+| winreg | 0.56.0 | MIT | Autostart und App-Kennung unter HKCU (`daedyx-background`, nur Windows) | Fassung wie in Desk |
+| windows | 0.62.2 | MIT OR Apache-2.0 | Info-Center zählen und leeren (`daedyx-background`, nur Windows) | Fassung wie in Desk; nur die drei nötigen Merkmale |
+| tokio (weitere Merkmale) | 1.54.1 | MIT | Pipe der Einzelinstanz in `daedyx-background`: `rt-multi-thread`, `time`, `net`, `io-util` | gleiche Fassung, nur Merkmale dazu (wie Desk) |
 
 Nicht genommen: eframe-Merkmal `system_fonts` (egui sucht dann selbst Ersatzschriften im System) –
 bringt eine weitere Abhängigkeit; für Deutsch, Englisch und Französisch reichen Systemschrift und

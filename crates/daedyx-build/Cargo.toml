@@ -1,0 +1,16 @@
+[package]
+name = "daedyx-build"
+version.workspace = true
+description = "Bau-Helfer der egui-Apps (build.rs): Manifest mit Common Controls 6, Programmsymbol ohne rc.exe; dazu die Installer-Vorlage (aus Desk, Tasks T1b)"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+# Keine Abhängigkeiten: läuft als Bau-Abhängigkeit vor jedem anderen Code der App.
+[dependencies]
+
+[dev-dependencies]
+daedyx-ui = { path = "../daedyx-ui", features = ["lint"] }

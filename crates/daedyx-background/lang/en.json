@@ -1,0 +1,10 @@
+{
+  "hintergrund.termin.titel": "Event: {titel}",
+  "hintergrund.termin.neutral": "Event reminder",
+  "hintergrund.termin.um": "Starts at {zeit}",
+  "hintergrund.termin.ganztags": "All day",
+  "hintergrund.aufgabe.titel": "Task: {titel}",
+  "hintergrund.aufgabe.neutral": "Task reminder",
+  "hintergrund.aufgabe.um": "Due at {zeit}",
+  "hintergrund.aufgabe.heute": "Due today"
+}
