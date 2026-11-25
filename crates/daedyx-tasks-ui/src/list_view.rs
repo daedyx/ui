@@ -25,7 +25,7 @@ pub fn title(tasks: &TasksUi, texts: &Texts) -> String {
     }
 }
 
-/// Kopfzeile: Überschrift, bei Listen der Umschalter, darunter eine Fehlermeldung, falls es eine gibt.
+/// Kopfzeile: Überschrift, bei Listen der Umschalter (falls an) und das Menü, darunter eine Fehlermeldung, falls es eine gibt.
 pub fn header(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
     let look = look_ui(ui);
     let name = title(tasks, texts);
@@ -38,34 +38,10 @@ pub fn header(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
         mark_heading(ui, h.id, 1, &name);
         if tasks.list_id().is_some() && tasks.search.trim().is_empty() {
             ui.add_space(f32::from(TOKENS.spacing.s4));
-            named_scope(
-                ui,
-                "aufgaben_modus",
-                Role::TabList,
-                &texts.t("aufgaben.modus"),
-                |ui| {
-                    for (mode, key) in [
-                        (Mode::List, "aufgaben.modus.liste"),
-                        (Mode::Board, "aufgaben.modus.board"),
-                    ] {
-                        let active = tasks.mode == mode;
-                        let kind = if active {
-                            ButtonKind::Secondary
-                        } else {
-                            ButtonKind::Quiet
-                        };
-                        let r = button(ui, kind, &texts.t(key));
-                        r.widget_info(|| {
-                            eframe::egui::WidgetInfo::labeled(Role::Tab, true, texts.t(key))
-                        });
-                        mark_selected(ui, r.id, active);
-                        if r.clicked() {
-                            tasks.set_mode(mode);
-                        }
-                    }
-                },
-            );
-            ui.add_space(f32::from(TOKENS.spacing.s2));
+            if tasks.mode_switch {
+                mode_switch(ui, tasks, texts);
+                ui.add_space(f32::from(TOKENS.spacing.s2));
+            }
             super::list_menu::show(ui, tasks, texts);
         }
     });
@@ -74,6 +50,35 @@ pub fn header(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
         ui.label(RichText::new(text).color(look.p.state.error.text));
     }
     ui.add_space(f32::from(TOKENS.spacing.s3));
+}
+
+/// Umschalter Liste/Board (Rolle Tab), nur wenn `TasksUi::mode_switch` an ist.
+fn mode_switch(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
+    named_scope(
+        ui,
+        "aufgaben_modus",
+        Role::TabList,
+        &texts.t("aufgaben.modus"),
+        |ui| {
+            for (mode, key) in [
+                (Mode::List, "aufgaben.modus.liste"),
+                (Mode::Board, "aufgaben.modus.board"),
+            ] {
+                let active = tasks.mode == mode;
+                let kind = if active {
+                    ButtonKind::Secondary
+                } else {
+                    ButtonKind::Quiet
+                };
+                let r = button(ui, kind, &texts.t(key));
+                r.widget_info(|| eframe::egui::WidgetInfo::labeled(Role::Tab, true, texts.t(key)));
+                mark_selected(ui, r.id, active);
+                if r.clicked() {
+                    tasks.set_mode(mode);
+                }
+            }
+        },
+    );
 }
 
 /// Eingabezeile „Neue Aufgabe eingeben und Enter drücken“ (Schnelleingabe mit Tag, Uhrzeit, `!`).

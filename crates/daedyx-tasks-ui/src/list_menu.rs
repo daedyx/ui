@@ -1,4 +1,4 @@
-//! Menü „Liste“ in der Kopfzeile einer eigenen Liste: Umbenennen (Feld in der Leiste), eine der sechs
+//! Menü „Listen-Aktionen“ in der Kopfzeile einer eigenen Liste: Umbenennen (Feld in der Leiste), eine der sechs
 //! Tokenfarben, Löschen mit Rückfrage. Dieselben Wege gibt es auf der Listenzeile (F2, Entf).
 use super::colors::NAMES;
 use super::{Ask, TasksUi};

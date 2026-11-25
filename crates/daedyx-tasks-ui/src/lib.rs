@@ -11,6 +11,7 @@ pub mod colors;
 mod confirm;
 mod detail;
 mod detail_fields;
+mod draft;
 mod due;
 mod layout;
 mod list_menu;
@@ -28,6 +29,7 @@ mod store_due;
 mod store_sections;
 pub mod texts;
 
+pub use draft::Draft;
 pub use layout::show;
 pub use start::start_with;
 
@@ -57,19 +59,6 @@ pub enum Ask {
     List(String),
 }
 
-/// Eingaben im Detailbereich, die erst beim Verlassen des Feldes (oder Enter) gelten.
-#[derive(Debug, Clone, Default, PartialEq)]
-pub struct Draft {
-    pub id: String,
-    pub title: String,
-    pub notes: String,
-    pub date: String,
-    pub time: String,
-    pub subtask: String,
-    /// Stand der Aufgabe beim letzten Laden (Titel, Notiz, Fälligkeit, mit Uhrzeit).
-    pub seen: (String, String, Option<String>, bool),
-}
-
 pub struct TasksUi {
     store: Option<Arc<TaskStore>>,
     pub sel: Sel,
@@ -89,6 +78,8 @@ pub struct TasksUi {
     /// Liste, die gerade umbenannt wird, mit Entwurf.
     pub renaming_list: Option<(String, String)>,
     pub draft: Draft,
+    /// Umschalter Liste/Board im Listenkopf zeigen. Desk ja; Tasks nein, dort wechselt die Navigationsleiste.
+    pub mode_switch: bool,
     /// Schlüssel der letzten Fehlermeldung (`aufgaben.fehler.*`).
     pub error: Option<String>,
 }
@@ -112,6 +103,7 @@ impl TasksUi {
             new_list: String::new(),
             renaming_list: None,
             draft: Draft::default(),
+            mode_switch: true,
             error: None,
         };
         ui.refresh();
@@ -195,5 +187,7 @@ mod harness_tests;
 mod model_tests;
 #[cfg(test)]
 mod store_tests;
+#[cfg(test)]
+mod switch_tests;
 #[cfg(test)]
 mod test_support;
