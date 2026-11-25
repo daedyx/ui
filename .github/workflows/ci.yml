@@ -5,8 +5,14 @@
 name: ci
 
 on:
+  # Bis zum Öffentlichstellen eingeschränkt, danach wieder voll (Entscheid 2026-11-25): ohne CORE_READ_TOKEN wäre
+  # jeder Lauf auf einem Arbeitszweig rot (Fehler-Mails, Windows-Minuten). Arbeitszweige prüft bis dahin der lokale
+  # Haken (.githooks/pre-commit) mit denselben Werkzeugen.
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 permissions: {}
 
