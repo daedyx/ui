@@ -52,7 +52,9 @@ impl TasksUi {
         }
     }
 
-    /// Geschwister von `t` (gleiche Oberaufgabe, gleicher Abschnitt bei obersten) ohne `t`, nach Position.
+    /// Geschwister von `t` (gleiche Liste, gleiche Oberaufgabe) ohne `t`, nach Position. Abschnitte zählen bewusst nicht:
+    /// Die Liste zeigt die obersten Aufgaben ohne Abschnittsgruppen nach Position, Alt+↑/↓ geht zum sichtbaren Nachbarn.
+    /// Im Board sortiert `move_card` je Spalte.
     fn siblings(&self, t: &Task) -> Vec<Task> {
         let mut v: Vec<Task> = self
             .items

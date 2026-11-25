@@ -38,9 +38,15 @@ fn sync(tasks: &mut TasksUi, texts: &Texts, t: &Task) {
             subtask,
             seen,
             depth: tasks.depth_of(&t.id),
+            parent: t.parent_id.clone(),
             alarms: tasks.alarms_of(&t.id),
             ..Draft::default()
         };
+    }
+    // Verschoben unter eine andere Oberaufgabe (Titel und Notiz gleich): Ebene neu lesen (Review T3a, N-4).
+    if tasks.draft.parent != t.parent_id {
+        tasks.draft.depth = tasks.depth_of(&t.id);
+        tasks.draft.parent = t.parent_id.clone();
     }
     if tasks.draft.repeat_seen != t.repeat {
         let r = t.repeat.as_ref();

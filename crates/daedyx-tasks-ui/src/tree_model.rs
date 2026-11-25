@@ -1,9 +1,7 @@
 //! Liste als Baum (Tasks T3a): Unteraufgaben beliebig tief direkt unter ihrer Oberaufgabe, vier Sortierungen für
 //! die obersten Aufgaben (der Unterbaum folgt in Handreihenfolge), Zähler über alle Nachfahren. Reine Rechnung.
 use super::model::Row;
-use chrono::NaiveDate;
 use chrono_tz::Tz;
-use daedyx_tasks_core::due_time::local_at;
 use daedyx_tasks_core::types::Task;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -36,18 +34,8 @@ impl SortMode {
     }
 }
 
-/// Tag der Fälligkeit in Ortszeit (`None` ohne Fälligkeit oder bei unlesbaren Sekunden).
-pub fn due_day(t: &Task, tz: Tz) -> Option<NaiveDate> {
-    let due = t.due.as_deref()?;
-    if t.due_has_time {
-        due.parse::<i64>()
-            .ok()
-            .and_then(|s| local_at(tz, s))
-            .map(|d| d.date())
-    } else {
-        NaiveDate::parse_from_str(due, "%Y-%m-%d").ok()
-    }
-}
+/// Tag der Fälligkeit in Ortszeit (Kern `smart::due_day`; `None` ohne Fälligkeit oder bei unlesbaren Sekunden).
+pub use daedyx_tasks_core::smart::due_day;
 
 /// Titel zum Vergleichen: ohne Groß-/Kleinschreibung, Umlaute wie ihr Grundbuchstabe (ä wie a, ß wie ss).
 pub fn title_key(title: &str) -> String {
@@ -137,14 +125,17 @@ pub fn progress(items: &[Task]) -> HashMap<String, (usize, usize)> {
         .collect();
     let mut out: HashMap<String, (usize, usize)> = HashMap::new();
     for t in items.iter().filter(|t| t.parent_id.is_some()) {
+        // Jede Oberaufgabe höchstens einmal je Aufgabe zählen; ein Kreis (kaputte Daten) endet beim ersten Wiedersehen.
+        let mut seen: HashSet<&str> = HashSet::from([t.id.as_str()]);
         let mut at = t.id.as_str();
-        let mut steps = 0;
-        while let Some(&p) = parent.get(at).filter(|_| steps < items.len()) {
+        while let Some(&p) = parent.get(at) {
+            if !seen.insert(p) {
+                break;
+            }
             let e = out.entry(p.to_owned()).or_default();
             e.0 = e.0.saturating_add(usize::from(t.done_at.is_some()));
             e.1 = e.1.saturating_add(1);
             at = p;
-            steps = steps.saturating_add(1);
         }
     }
     out

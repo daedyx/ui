@@ -92,15 +92,19 @@ pub fn moved_sections(sections: &[Section], id: &str, step: isize) -> Option<Vec
     Some(ids)
 }
 
-/// Abschnitt `id` an die Stelle von `target` (Ziehen). `None`, wenn nichts zu tun ist.
+/// Abschnitt `id` an die Stelle von `target` (Ziehen), ohne gültiges Ziel ans Ende. `None`, wenn nichts zu tun ist.
 pub fn dropped_sections(sections: &[Section], id: &str, target: &str) -> Option<Vec<String>> {
     let mut ids: Vec<String> = sections.iter().map(|s| s.id.clone()).collect();
     let from = ids.iter().position(|x| x == id)?;
-    let to = ids.iter().position(|x| x == target)?;
+    // Ohne gültiges Ziel ans Ende, wie die alte Oberfläche (Entscheid T3-1).
+    let to = ids
+        .iter()
+        .position(|x| x == target)
+        .unwrap_or(ids.len().saturating_sub(1));
     if from == to {
         return None;
     }
     let moved = ids.remove(from);
-    ids.insert(to, moved);
+    ids.insert(to.min(ids.len()), moved);
     Some(ids)
 }

@@ -110,3 +110,26 @@ fn desk_bleibt_bei_einer_ebene() {
         "Desk-Zeilen ohne Zähler"
     );
 }
+
+/// Review T3a, N-4: Wird die Aufgabe unter eine andere Oberaufgabe verschoben (Titel und Notiz gleich), liest das
+/// Detail die Ebene neu: auf Ebene 6 Hinweis, oben angekommen wieder das Eingabefeld.
+#[test]
+fn ebene_im_detail_folgt_dem_verschieben() {
+    let mut h = harness_tasks(Some((2, false)));
+    chain(&mut h, 6);
+    select(&mut h, "Ebene 6");
+    let field = |h: &egui_kittest::Harness<'static, crate::TasksUi>| {
+        h.query_all_by_role_and_label(Role::TextInput, "Neue Unteraufgabe")
+            .count()
+    };
+    assert_eq!(field(&h), 0);
+    let id = id_of(&h, "Ebene 6");
+    let list = h.state().list_id().unwrap().to_owned();
+    let store = h.state().shared_store().unwrap();
+    store.move_deep(&id, (&list, None, None), 100.0, 6).unwrap();
+    h.state_mut().refresh();
+    h.run();
+    h.run();
+    assert_eq!(h.state().draft.depth, 0);
+    assert_eq!(field(&h), 1);
+}

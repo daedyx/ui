@@ -120,7 +120,7 @@ fn marks(ui: &mut Ui, tasks: &TasksUi, texts: &Texts, look: &Look, t: &Task, rec
     }
     // Zähler über alle Nachfahren (nur mit Baum, Desk zeigt ihn auf den Karten).
     if tasks.features.deep()
-        && let Some((done, all)) = super::tree_model::progress(&tasks.items).get(&t.id)
+        && let Some((done, all)) = tasks.progress.get(&t.id)
     {
         let text = texts.tf(
             "aufgaben.karte.unter",

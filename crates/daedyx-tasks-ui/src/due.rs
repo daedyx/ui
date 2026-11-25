@@ -1,7 +1,7 @@
-//! Fälligkeit als kurzer Text („Heute“, „Morgen 15:30“, „24.12.“) und ihre Tönung (überfällig rot,
+//! Fälligkeit als kurzer Text („Heute“, „Morgen 15:30“, „Do, 24.12.“, „05.01.2027“) und ihre Tönung (überfällig rot,
 //! heute bernstein, sonst neutral). Muster aus der Sprachdatei; ein kaputtes Muster ergibt „?“.
 use super::TasksUi;
-use chrono::{DateTime, NaiveDate, TimeZone};
+use chrono::{DateTime, Datelike, NaiveDate, TimeZone};
 use chrono_tz::Tz;
 use daedyx_tasks_core::smart::due_day;
 use daedyx_tasks_core::types::Task;
@@ -16,6 +16,23 @@ fn formatted(value: impl std::fmt::Display) -> String {
         return "?".into();
     }
     text
+}
+
+/// Andere Tage: im laufenden Jahr mit Wochentag („Mo, 23.11.“), in fremden Jahren mit Jahr („05.01.2027“), wie die
+/// alte Oberfläche. Wochentage aus der Sprachdatei (chrono kennt nur englische Namen).
+fn other_day(texts: &Texts, day: NaiveDate, today: NaiveDate) -> String {
+    if day.year() != today.year() {
+        return formatted(day.format(&texts.t("aufgaben.datum.jahr")));
+    }
+    let index = usize::try_from(day.weekday().num_days_from_monday()).unwrap_or(0);
+    let weekday = super::detail_repeat::DAYS_SHORT
+        .get(index)
+        .map_or_else(String::new, |k| texts.t(k));
+    let date = formatted(day.format(&texts.t("aufgaben.datum.kurz")));
+    texts.tf(
+        "aufgaben.datum.tag",
+        &[("wochentag", &weekday), ("datum", &date)],
+    )
 }
 
 impl TasksUi {
@@ -42,7 +59,7 @@ impl TasksUi {
             0 => texts.t("aufgaben.faellig.heute"),
             1 => texts.t("aufgaben.faellig.morgen"),
             -1 => texts.t("aufgaben.faellig.gestern"),
-            _ => formatted(day.format(&texts.t("aufgaben.datum.kurz"))),
+            _ => other_day(texts, day, today),
         };
         if let Some(time) = self.due_time(t) {
             text.push(' ');

@@ -11,8 +11,10 @@ pub struct Draft {
     pub subtask: String,
     /// Stand der Aufgabe beim letzten Laden (Titel, Notiz, Fälligkeit, mit Uhrzeit).
     pub seen: (String, String, Option<String>, bool),
-    /// Ebene der Aufgabe (0 = oberste), beim Laden gemerkt.
+    /// Ebene der Aufgabe (0 = oberste), beim Laden gemerkt; neu, sobald sich `parent` ändert.
     pub depth: u32,
+    /// Oberaufgabe beim letzten Laden der Ebene.
+    pub parent: Option<String>,
     /// Erinnerungen in Minuten vor der Fälligkeit (nur mit mehreren Erinnerungen genutzt).
     pub alarms: Vec<i64>,
     /// Felder der vollen Wiederholung: Abstand und fester Monatstag als Eingabetext.

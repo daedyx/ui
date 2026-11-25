@@ -69,7 +69,7 @@ fn kind_menu(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
 }
 
 /// Wochentage 1 (Montag) bis 7 (Sonntag): kurz auf dem Knopf, lang für Screenreader.
-const DAYS_SHORT: [&str; 7] = [
+pub(crate) const DAYS_SHORT: [&str; 7] = [
     "aufgaben.wochentag.kurz.1",
     "aufgaben.wochentag.kurz.2",
     "aufgaben.wochentag.kurz.3",

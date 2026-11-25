@@ -89,7 +89,7 @@ fn meta(tasks: &TasksUi, texts: &Texts, t: &Task) -> String {
         parts.push(texts.t(super::row_paint::priority_key(t.priority)));
     }
     // Erledigt/gesamt über alle Nachfahren (bei einer Ebene wie bisher die direkten Unteraufgaben).
-    if let Some((done, all)) = super::tree_model::progress(&tasks.items).get(&t.id) {
+    if let Some((done, all)) = tasks.progress.get(&t.id) {
         parts.push(texts.tf(
             "aufgaben.karte.unter",
             &[

@@ -46,6 +46,7 @@ impl TasksUi {
         } else {
             store.search(&self.search).unwrap_or_default()
         };
+        self.progress = super::tree_model::progress(&self.items);
         self.sections = list
             .map(|l| store.sections(l).unwrap_or_default())
             .unwrap_or_default();

@@ -160,5 +160,7 @@
   "aufgaben.karte.neu.kurz": "+ Karte",
   "aufgaben.karte.neu": "Karte in „{name}“ hinzufügen",
   "aufgaben.karte.feld": "Neue Karte in „{name}“",
-  "aufgaben.verschieben": "Verschieben nach …"
+  "aufgaben.verschieben": "Verschieben nach …",
+  "aufgaben.datum.tag": "{wochentag}, {datum}",
+  "aufgaben.datum.jahr": "%d.%m.%Y"
 }

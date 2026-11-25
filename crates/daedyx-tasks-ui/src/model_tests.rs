@@ -94,6 +94,12 @@ fn abschnitte_verschieben_und_ablegen() {
     );
     assert_eq!(dropped_sections(&s, "a", "a"), None);
     assert_eq!(dropped_sections(&s, "x", "a"), None);
+    // Ohne gültiges Ziel ans Ende (Entscheid T3-1); wer schon am Ende steht, bleibt.
+    assert_eq!(
+        dropped_sections(&s, "a", "fehlt"),
+        Some(vec!["b".into(), "c".into(), "a".into()])
+    );
+    assert_eq!(dropped_sections(&s, "c", "fehlt"), None);
 }
 
 #[test]

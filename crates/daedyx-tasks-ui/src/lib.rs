@@ -84,6 +84,8 @@ pub struct TasksUi {
     pub board_lists: std::collections::HashSet<String>,
     /// Spalte (`None` = „Ohne Abschnitt“) mit offenem Feld „+ Karte“ und dessen Entwurf.
     pub adding_card: Option<(Option<String>, String)>,
+    /// Erledigt/gesamt über alle Nachfahren je Aufgabe, einmal je `refresh()` gerechnet (Zeilen und Karten lesen nur).
+    pub progress: std::collections::HashMap<String, (usize, usize)>,
     /// Schlüssel der letzten Fehlermeldung (`aufgaben.fehler.*`).
     pub error: Option<String>,
 }
@@ -112,6 +114,7 @@ impl TasksUi {
             sort: tree_model::SortMode::Hand,
             board_lists: Default::default(),
             adding_card: None,
+            progress: Default::default(),
             error: None,
         };
         ui.refresh();
@@ -146,6 +149,8 @@ mod board_more_tests;
 mod colors_tests;
 #[cfg(test)]
 mod deep_tests;
+#[cfg(test)]
+mod due_tests;
 #[cfg(test)]
 mod gap_tests;
 #[cfg(test)]
