@@ -1,5 +1,5 @@
 //! Unteraufgaben bis Ebene 6 (Tasks T3a, Vorlage `TasksDeep.test.tsx`): anlegen, einrücken mit Ebene für
-//! Screenreader, Zähler über alle Nachfahren, Hinweis auf der letzten Ebene, „↑ Oberaufgabe“, „Öffnen“. Desk bleibt
+//! Screenreader, Zähler über alle Nachfahren, Hinweis auf der letzten Ebene, „Zur Oberaufgabe“, „Öffnen“. Desk bleibt
 //! bei einer Ebene. Nur erfundene Aufgaben.
 use crate::test_support::{click, harness, harness_tasks, id_of, item_label, select, type_into};
 use eframe::egui::accesskit::Role;
@@ -99,7 +99,7 @@ fn desk_bleibt_bei_einer_ebene() {
             .count(),
         0
     );
-    assert_eq!(h.query_all_by_label("↑ Oberaufgabe").count(), 0);
+    assert_eq!(h.query_all_by_label("Zur Oberaufgabe").count(), 0);
     let kaese = id_of(&h, "Käse");
     h.state_mut().add_subtask(&kaese, "Zu tief für Desk");
     assert_eq!(h.state().error.as_deref(), Some("aufgaben.fehler.too_deep"));

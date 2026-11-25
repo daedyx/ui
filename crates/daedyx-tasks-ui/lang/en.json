@@ -115,7 +115,7 @@
   "aufgaben.sortierung.faellig": "due date",
   "aufgaben.sortierung.prioritaet": "priority",
   "aufgaben.sortierung.titel": "title",
-  "aufgaben.detail.oberaufgabe.kurz": "↑ Parent task",
+  "aufgaben.detail.oberaufgabe.kurz": "To parent task",
   "aufgaben.detail.oberaufgabe": "Go to parent task “{titel}”",
   "aufgaben.unter.oeffnen.kurz": "Open",
   "aufgaben.unter.oeffnen": "Open subtask “{titel}”",

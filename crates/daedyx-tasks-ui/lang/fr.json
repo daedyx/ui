@@ -115,7 +115,7 @@
   "aufgaben.sortierung.faellig": "échéance",
   "aufgaben.sortierung.prioritaet": "priorité",
   "aufgaben.sortierung.titel": "titre",
-  "aufgaben.detail.oberaufgabe.kurz": "↑ Tâche parente",
+  "aufgaben.detail.oberaufgabe.kurz": "Vers la tâche parente",
   "aufgaben.detail.oberaufgabe": "Aller à la tâche parente « {titel} »",
   "aufgaben.unter.oeffnen.kurz": "Ouvrir",
   "aufgaben.unter.oeffnen": "Ouvrir la sous-tâche « {titel} »",

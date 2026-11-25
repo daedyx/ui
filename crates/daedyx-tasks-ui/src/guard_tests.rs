@@ -49,3 +49,20 @@ fn jeder_fehlercode_des_kerns_hat_einen_text_im_crate() {
         }
     }
 }
+
+/// Jeder Text lässt sich mit der Ersatzschrift von `daedyx-ui` zeichnen (ohne Systemschriften). Sonst fehlen Zeichen
+/// oder egui stürzt beim Zeichnen ab; Desk prüft dasselbe für seine Kopie der Texte (T3a: „↑“ fehlte).
+#[test]
+fn ersatzschrift_kann_alle_aufgaben_texte() {
+    use eframe::egui::{Context, FontFamily, FontId};
+    let ctx = Context::default();
+    ctx.set_fonts(daedyx_ui::fonts::definitions(|_| None));
+    let mut out = ctx.run_ui(Default::default(), |_| {});
+    out.textures_delta.clear();
+    let id = FontId::new(14.0, FontFamily::Proportional);
+    for lang in Language::ALL {
+        for (k, v) in texts(lang).entries() {
+            assert!(ctx.fonts_mut(|f| f.has_glyphs(&id, v)), "{lang:?} {k}: {v}");
+        }
+    }
+}

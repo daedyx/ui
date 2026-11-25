@@ -1,4 +1,4 @@
-//! Unteraufgaben im Detail: abhaken, neue anlegen (Enter). Mit Baum (Tasks T3a) dazu „↑ Oberaufgabe“, „Öffnen“ je
+//! Unteraufgaben im Detail: abhaken, neue anlegen (Enter). Mit Baum (Tasks T3a) dazu „Zur Oberaufgabe“, „Öffnen“ je
 //! Unteraufgabe und auf der tiefsten Ebene ein Hinweis statt des Eingabefelds; Desk bleibt bei einer Ebene.
 use super::TasksUi;
 use super::row_paint::{check, detail_check_id};
@@ -10,7 +10,7 @@ use daedyx_ui::tokens::TOKENS;
 use daedyx_ui::widgets::{ButtonKind, button, text_input};
 use eframe::egui::{FontId, Key, RichText, Sense, Ui, WidgetInfo, accesskit::Role, pos2, vec2};
 
-/// „↑ Oberaufgabe“ über dem Detail einer Unteraufgabe (nur mit Baum).
+/// „Zur Oberaufgabe“ über dem Detail einer Unteraufgabe (nur mit Baum).
 pub fn parent_link(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     let Some(p) = t.parent_id.as_deref().filter(|_| tasks.features.deep()) else {
         return;

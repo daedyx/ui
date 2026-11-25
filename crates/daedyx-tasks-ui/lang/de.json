@@ -115,7 +115,7 @@
   "aufgaben.sortierung.faellig": "Fälligkeit",
   "aufgaben.sortierung.prioritaet": "Priorität",
   "aufgaben.sortierung.titel": "Titel",
-  "aufgaben.detail.oberaufgabe.kurz": "↑ Oberaufgabe",
+  "aufgaben.detail.oberaufgabe.kurz": "Zur Oberaufgabe",
   "aufgaben.detail.oberaufgabe": "Zur Oberaufgabe „{titel}“",
   "aufgaben.unter.oeffnen.kurz": "Öffnen",
   "aufgaben.unter.oeffnen": "Unteraufgabe „{titel}“ öffnen",
