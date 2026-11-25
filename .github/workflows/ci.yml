@@ -1,0 +1,134 @@
+# Prüfung bei jedem Push und Pull Request (SICHERHEIT 6.2, wie in daedyx/core; Review T1a M-1).
+# Nur Lesen, Actions per voller Commit-ID, kein pull_request_target. Einziges Secret: CORE_READ_TOKEN zum Lesen des
+# privaten Kerns (nur in den Schritten, die ihn abrufen; entfällt, sobald daedyx/core öffentlich ist). Bis dahin ist
+# die CI rot, wenn das Secret im Repo daedyx/ui fehlt (Bericht T1a, Nachtrag 2).
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+env:
+  RUST_VERSION: "1.99.1"
+  CARGO_TERM_COLOR: never
+
+jobs:
+  # Zuerst und allein: Scan und Ausnahmenzähler auf einem frischen Checkout, bevor irgendein Code aus dem Repo läuft.
+  # Das Prüfprogramm wird ohne Cargo direkt mit rustc gebaut (nur Standardbibliothek): keine Cargo-Konfiguration, kein
+  # Build-Skript, kein Abruf. Es liest den Commit (`--head`), nicht den Arbeitsordner.
+  vorpruefung:
+    name: scan, exceptions (vor jedem Build)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Cargo-Konfiguration und Prüfprogramm prüfen (ohne Cargo)
+        shell: pwsh
+        run: |
+          $muster = '(^|/)(\.cargo/config(\.toml)?|rust-toolchain(\.toml)?)$'
+          $dateien = @(git ls-files | Where-Object { $_ -match $muster })
+          if ($dateien.Count -ne 1 -or $dateien[0] -ne '.cargo/config.toml') { throw "Nur .cargo/config.toml ist erlaubt, gefunden: $dateien" }
+          $erlaubt = @('[alias]', 'xtask = "run --quiet --package xtask --"')
+          $zeilen = @(Get-Content .cargo/config.toml | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+          if (($zeilen -join "`n") -ne ($erlaubt -join "`n")) { throw ".cargo/config.toml enthält mehr als den xtask-Alias" }
+          if (git ls-files 'xtask/build.rs') { throw "xtask/build.rs ist nicht erlaubt" }
+          $xtask = @(Get-Content xtask/Cargo.toml | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') })
+          if ($xtask | Where-Object { $_ -match '^\[.*dependencies' -or $_ -match '^build\s*=' -or $_ -match 'proc-macro' }) { throw "xtask/Cargo.toml darf keine Abhängigkeiten und kein Build-Skript haben" }
+      - name: Rust festnageln
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_VERSION --profile minimal
+          rustup default $env:RUST_VERSION
+      - name: Prüfprogramm ohne Cargo bauen
+        shell: pwsh
+        run: rustc --edition 2024 -O xtask/src/main.rs -o "$env:RUNNER_TEMP\xtask.exe"
+      - name: scan
+        shell: pwsh
+        run: '& "$env:RUNNER_TEMP\xtask.exe" scan --head'
+      - name: exceptions
+        shell: pwsh
+        run: '& "$env:RUNNER_TEMP\xtask.exe" exceptions --head'
+
+  pruefen:
+    name: fmt, clippy, test, Testzahl
+    needs: vorpruefung
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Rust festnageln
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_VERSION --profile minimal --component clippy,rustfmt
+          rustup default $env:RUST_VERSION
+      - name: Privaten Kern abrufen (Token nur für diesen Schritt)
+        shell: pwsh
+        env:
+          CORE_READ_TOKEN: ${{ secrets.CORE_READ_TOKEN }}
+        run: |
+          if (-not $env:CORE_READ_TOKEN) { throw "Secret CORE_READ_TOKEN fehlt (Lesezugriff auf daedyx/core)" }
+          $env:GIT_CONFIG_COUNT = '1'
+          $env:GIT_CONFIG_KEY_0 = 'url.https://x-access-token:' + $env:CORE_READ_TOKEN + '@github.com/daedyx/core.insteadOf'
+          $env:GIT_CONFIG_VALUE_0 = 'https://github.com/daedyx/core'
+          $env:CARGO_NET_GIT_FETCH_WITH_CLI = 'true'
+          cargo fetch --locked
+          if ($LASTEXITCODE -ne 0) { throw "Abruf der Abhängigkeiten fehlgeschlagen" }
+      # Das Prüfprogramm vor jedem anderen Code bauen und beiseitelegen.
+      - name: xtask bauen
+        shell: pwsh
+        run: |
+          cargo build --locked --offline --package xtask
+          Copy-Item .\target\debug\xtask.exe "$env:RUNNER_TEMP\xtask.exe"
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --all-features --locked --offline -- -D warnings
+      # bash läuft bei GitHub mit `-eo pipefail`: ein Fehler in `cargo test` bleibt trotz `tee` rot.
+      - name: Tests mit Protokoll
+        shell: bash
+        run: cargo test --workspace --all-features --locked --offline --no-fail-fast 2>&1 | tee "$RUNNER_TEMP/test.log"
+      # Keine Testgruppe darf still wegfallen: Mindestzahl je Testprogramm aus dem Commit (xtask/testzahlen.txt).
+      - name: Testzahl
+        shell: pwsh
+        run: '& "$env:RUNNER_TEMP\xtask.exe" testzahl "$env:RUNNER_TEMP\test.log" --head'
+      # Tests dürfen keine versionierten Dateien ändern.
+      - name: Arbeitsordner unverändert
+        shell: pwsh
+        run: |
+          $aenderungen = git status --porcelain --untracked-files=no
+          if ($aenderungen) { throw "Tests haben versionierte Dateien geändert: $aenderungen" }
+
+  lieferkette:
+    name: cargo deny, cargo audit
+    needs: vorpruefung
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Rust festnageln
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+          rustup default "$RUST_VERSION"
+      - name: Werkzeuge in fester Version (Quelle crates.io, Prüfsummen über Cargo.lock der Werkzeuge)
+        run: |
+          cargo install --locked cargo-deny --version 0.20.2
+          cargo install --locked cargo-audit --version 0.22.2
+      - name: Privaten Kern abrufen (Token nur für diesen Schritt)
+        env:
+          CORE_READ_TOKEN: ${{ secrets.CORE_READ_TOKEN }}
+        run: |
+          test -n "$CORE_READ_TOKEN" || { echo "Secret CORE_READ_TOKEN fehlt"; exit 1; }
+          git config --global "url.https://x-access-token:${CORE_READ_TOKEN}@github.com/daedyx/core.insteadOf" https://github.com/daedyx/core
+          CARGO_NET_GIT_FETCH_WITH_CLI=true cargo fetch --locked
+          git config --global --unset-all "url.https://x-access-token:${CORE_READ_TOKEN}@github.com/daedyx/core.insteadOf"
+      - run: cargo deny --locked --offline check advisories bans licenses sources
+      - run: cargo audit --deny warnings

@@ -2,6 +2,19 @@
 # Lokaler Wächter vor jedem Commit (SICHERHEIT 6.2). Nie mit --no-verify umgehen.
 dir="$(dirname "$0")"
 fail=0
+# Zuerst ohne Cargo (wie im Kern, Review T1a R-1): Die Cargo-Konfiguration darf nur den xtask-Alias enthalten, sonst
+# könnte ein Alias, `runner` oder `rustc-wrapper` die Prüfungen unten abschalten. Ohne Cargo kein Commit.
+andere=$(git ls-files | grep -E '(^|/)(\.cargo/config(\.toml)?|rust-toolchain(\.toml)?)$' | grep -vx '.cargo/config.toml' || true)
+inhalt=$(grep -v '^[[:space:]]*#' .cargo/config.toml | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$')
+erwartet=$(printf '%s\n%s' '[alias]' 'xtask = "run --quiet --package xtask --"')
+if [ -n "$andere" ] || [ "$inhalt" != "$erwartet" ]; then
+  echo "Cargo-Konfiguration: nur .cargo/config.toml mit dem xtask-Alias ist erlaubt." >&2
+  exit 1
+fi
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "cargo fehlt: Ohne cargo laufen fmt, xtask scan, exceptions und testzahl nicht, Commit gestoppt." >&2
+  exit 1
+fi
 for f in $(git diff --cached --name-only --diff-filter=ACMR); do
   case "$f" in
     CLAUDE.md|*/CLAUDE.md) echo "  $f: CLAUDE.md gehört nicht ins Git"; fail=1; continue ;;
@@ -20,10 +33,16 @@ if command -v gitleaks >/dev/null 2>&1; then
 else
   echo "  Hinweis: gitleaks nicht installiert, Geheimnis-Muster nur über scan.sh geprüft"
 fi
-if [ -f Cargo.toml ] && command -v cargo >/dev/null 2>&1; then
-  cargo fmt --all --check >/dev/null 2>&1 || { echo "  cargo fmt: Formatierung abweichend (cargo fmt --all)"; fail=1; }
-  cargo xtask scan --staged || fail=1
-  cargo xtask exceptions || fail=1
+cargo fmt --all --check >/dev/null 2>&1 || { echo "  cargo fmt: Formatierung abweichend (cargo fmt --all)"; fail=1; }
+cargo xtask scan --staged || fail=1
+cargo xtask exceptions || fail=1
+# Mindestzahl der Tests schon lokal (Review T1a M-1): alle Tests mit Protokoll, dann xtask testzahl.
+log="$(mktemp)"
+if cargo test --workspace --all-features --locked --offline --no-fail-fast >"$log" 2>&1; then
+  cargo xtask testzahl "$log" || fail=1
+else
+  echo "  cargo test: Tests rot"; fail=1
 fi
+rm -f "$log"
 if [ $fail -ne 0 ]; then echo "Commit gestoppt: bitte die Fundstellen beheben."; exit 1; fi
 exit 0
