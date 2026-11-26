@@ -1,6 +1,6 @@
 //! Einzelinstanz über eine benannte Pipe (Tokio, ohne eigenes `unsafe`; übernommen aus Spike S5). Anlegen und
 //! Verbinden laufen über `daedyx_sys::pipe` (Entscheid T4-7): Rechte nur für den eigenen Benutzer, keine
-//! Fernverbindung, und der zweite Start sendet nur, wenn der Server demselben Benutzer gehört.
+//! Fernverbindung, und der zweite Start sendet nur, wenn die Pipe demselben Benutzer gehört.
 //! Der erste Start legt die Pipe an (`first_pipe_instance`), jeder weitere verbindet sich,
 //! schickt das feste Wort `SHOW` und endet. `QUIT` beendet die laufende Instanz (für Updater/Installer).
 //! Es wird nie ein Inhalt übertragen.
@@ -119,7 +119,9 @@ mod win {
                 }
                 // Neue Instanz anlegen, bevor die alte bedient wird, damit die Pipe nie fehlt. Klappt das nicht,
                 // wird die Verbindung trotzdem bedient und das Anlegen mit Pause wiederholt, statt den Dienst zu
-                // beenden (Review T4, H4-1).
+                // beenden (Review T4, H4-1). Hat ein anderes Konto den Namen in der Lücke belegt, verwirft
+                // `create_server` jede Instanz mit fremden Rechten (Review N-P2): Der Dienst wartet dann ohne Pipe,
+                // bis der Name wieder frei ist, und dient nie auf der fremden Pipe.
                 match create(&name) {
                     Ok(next) => {
                         let conn = std::mem::replace(&mut server, next);
@@ -136,7 +138,8 @@ mod win {
         }
     }
 
-    /// Weitere Instanz derselben Pipe, mit denselben Rechten, nur für Verbindungen auf diesem Rechner.
+    /// Weitere Instanz derselben Pipe, nur für Verbindungen auf diesem Rechner. Trägt sie nicht genau die eigenen
+    /// Rechte (Name von einem anderen Konto belegt), ist das Ergebnis ein Fehler.
     fn create(name: &str) -> io::Result<NamedPipeServer> {
         pipe::create_server(name, false)
     }

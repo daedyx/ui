@@ -1,7 +1,8 @@
 //! Gehärtete Pipe der Einzelinstanz (Entscheid T4-7): Rechte nur für den eigenen Benutzer, keine Fernverbindung,
 //! Besitzerprüfung beim Verbinden. Jede Härtung hat eine Gegenprobe mit einer ungehärteten Pipe, damit der Test
 //! selbst beweist, dass er den Unterschied sieht. Jeder Test hat einen eigenen Pipe-Namen.
-use super::probe::{as_anonymous, security_text};
+use super::ffi::security_text;
+use super::probe::as_anonymous;
 use super::*;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -53,11 +54,11 @@ fn die_beschreibung_nennt_nur_den_eigenen_benutzer() {
 async fn die_pipe_erlaubt_nur_dem_eigenen_benutzer_zugriff() {
     let sid = user_sid().unwrap();
     let hard = create_server(&name("dacl"), true).unwrap();
-    let text = security_text(&hard).unwrap();
+    let text = security_text(&hard, ffi::OWNER_AND_DACL).unwrap();
     assert_eq!(text, format!("O:{sid}D:P(A;;FA;;;{sid})"));
     // Gegenprobe: Ohne eigene Beschreibung bekommt jeder (auch anonym) Lesezugriff.
     let plain = ServerOptions::new().create(name("dacl-plain")).unwrap();
-    let open = security_text(&plain).unwrap();
+    let open = security_text(&plain, ffi::OWNER_AND_DACL).unwrap();
     assert!(open.contains(";;;WD)") || open.contains(";;;AN)"), "{open}");
 }
 
@@ -78,19 +79,50 @@ async fn ein_fremdes_konto_kann_nicht_verbinden() {
 }
 
 /// Über `\\127.0.0.1\pipe\…` (Loopback) läuft die Verbindung wie von fern (über den Server-Dienst).
+/// Die Gegenprobe hat dieselben Rechte und unterscheidet sich nur im Merkmal (Review N-P3).
 #[tokio::test]
 async fn ein_entfernter_client_wird_abgewiesen() {
+    const ERROR_ACCESS_DENIED: i32 = 5;
     let hard_name = name("remote");
     let _hard = create_server(&hard_name, true).unwrap();
     let remote = |n: &str| n.replacen(r"\\.\", r"\\127.0.0.1\", 1);
-    assert!(ClientOptions::new().open(remote(&hard_name)).is_err());
-    // Gegenprobe: Eine Pipe, die Fernverbindungen annimmt, ist über denselben Weg erreichbar.
+    let err = ClientOptions::new().open(remote(&hard_name)).unwrap_err();
+    assert_eq!(err.raw_os_error(), Some(ERROR_ACCESS_DENIED), "{err}");
+    // Gegenprobe: gleiche Beschreibung (nur der eigene Benutzer), nur ohne `PIPE_REJECT_REMOTE_CLIENTS`.
     let plain_name = name("remote-plain");
-    let _plain = ServerOptions::new()
-        .reject_remote_clients(false)
-        .create(&plain_name)
-        .unwrap();
+    let sddl = owner_only_sddl(&user_sid().unwrap()).unwrap();
+    let mut open = ServerOptions::new();
+    open.first_pipe_instance(true).reject_remote_clients(false);
+    let _plain = ffi::create_with_sddl(&open, &plain_name, &sddl).unwrap();
     assert!(ClientOptions::new().open(remote(&plain_name)).is_ok());
+}
+
+/// Die Besitzerprüfung liest den Besitzer des Pipe-Objekts selbst, nicht den Server-Prozess (Review N-P1).
+#[tokio::test]
+async fn die_besitzerpruefung_liest_den_besitzer_der_pipe() {
+    let n = name("owner");
+    let server = create_server(&n, true).unwrap();
+    let client = ClientOptions::new().open(&n).unwrap();
+    let sid = user_sid().unwrap();
+    assert_eq!(pipe_owner_sid(&client).unwrap(), sid);
+    assert_eq!(pipe_owner_sid(&server).unwrap(), sid);
+}
+
+/// Gibt es den Namen schon mit fremden Rechten, erbt eine weitere Instanz diese Rechte. `create_server` verwirft sie,
+/// statt auf der fremden Pipe zu dienen (Review N-P2).
+#[tokio::test]
+async fn auf_einer_fremden_pipe_wird_keine_instanz_angelegt() {
+    let n = name("squat");
+    let _foreign = ServerOptions::new().create(&n).unwrap();
+    let err = create_server(&n, false).unwrap_err();
+    assert_eq!(err.kind(), std::io::ErrorKind::PermissionDenied);
+    // Gegenprobe: Ohne die Prüfung entstünde eine Instanz mit den offenen Rechten der fremden Pipe.
+    let sddl = owner_only_sddl(&user_sid().unwrap()).unwrap();
+    let mut next = ServerOptions::new();
+    next.first_pipe_instance(false).reject_remote_clients(true);
+    let unchecked = ffi::create_with_sddl(&next, &n, &sddl).unwrap();
+    let text = security_text(&unchecked, ffi::OWNER_AND_DACL).unwrap();
+    assert!(text.contains(";;;WD)") || text.contains(";;;AN)"), "{text}");
 }
 
 #[tokio::test]
@@ -98,7 +130,7 @@ async fn der_eigene_server_wird_erkannt_und_bekommt_das_wort() {
     let n = name("own");
     let server = create_server(&n, true).unwrap();
     let mut client = open_client(&n).unwrap();
-    assert_eq!(server_user_sid(&client).unwrap(), user_sid().unwrap());
+    assert_eq!(pipe_owner_sid(&client).unwrap(), user_sid().unwrap());
     server.connect().await.unwrap();
     client.write_all(b"SHOW").await.unwrap();
     drop(client);

@@ -37,7 +37,7 @@ async fn die_erste_instanz_laeuft_ueber_die_gehaertete_pipe() {
     // Verbinden geht nur über die Besitzerprüfung aus `daedyx-sys`; Rechte und Gegenproben prüft `daedyx-sys` selbst.
     let client = daedyx_sys::pipe::open_client(&name).unwrap();
     assert_eq!(
-        daedyx_sys::pipe::server_user_sid(&client).unwrap(),
+        daedyx_sys::pipe::pipe_owner_sid(&client).unwrap(),
         daedyx_sys::pipe::user_sid().unwrap()
     );
 }
