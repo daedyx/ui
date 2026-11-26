@@ -2,6 +2,8 @@
 //! Stelle mit `unsafe` (SICHERHEIT.md 2.1); jede Stelle trägt eine `// SAFETY:`-Begründung.
 use std::path::Path;
 
+#[cfg(windows)]
+pub mod pipe;
 mod process;
 pub use process::{RunEnd, run_with_limit};
 

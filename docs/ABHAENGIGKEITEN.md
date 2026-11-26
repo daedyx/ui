@@ -20,6 +20,7 @@ festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 | winreg | 0.56.0 | MIT | Autostart und App-Kennung unter HKCU (`daedyx-background`, nur Windows) | Fassung wie in Desk |
 | windows | 0.62.2 | MIT OR Apache-2.0 | Info-Center zählen und leeren (`daedyx-background`, nur Windows) | Fassung wie in Desk; nur die drei nötigen Merkmale |
 | tokio (weitere Merkmale) | 1.54.1 | MIT | Pipe der Einzelinstanz in `daedyx-background`: `rt-multi-thread`, `time`, `net`, `io-util` | gleiche Fassung, nur Merkmale dazu (wie Desk) |
+| tokio (in `daedyx-sys`) | 1.54.1 | MIT | Gehärtete Pipe der Einzelinstanz (Entscheid T4-7): `net`, in den Tests dazu `rt`, `macros`, `time`, `io-util`; nur unter Windows | gleiche Fassung, keine neue Abhängigkeit im Baum |
 
 Nicht genommen: eframe-Merkmal `system_fonts` (egui sucht dann selbst Ersatzschriften im System) –
 bringt eine weitere Abhängigkeit; für Deutsch, Englisch und Französisch reichen Systemschrift und

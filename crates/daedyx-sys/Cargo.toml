@@ -6,6 +6,14 @@ edition.workspace = true
 license.workspace = true
 publish.workspace = true
 
+# Gehärtete Pipe der Einzelinstanz (Entscheid T4-7): Server und Client aus tokio, die Sicherheitsbeschreibung von
+# hier. Gleiche Fassung wie in daedyx-background, nur das Merkmal `net`.
+[target.'cfg(windows)'.dependencies]
+tokio = { workspace = true, features = ["net"] }
+
+[target.'cfg(windows)'.dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
+
 # Eigener Lint-Block (SICHERHEIT.md 2.1, Anhang A; Ausnahme A-019): unsafe nur je Funktion freigegeben und dokumentiert.
 [lints.rust]
 unsafe_code = "deny"
