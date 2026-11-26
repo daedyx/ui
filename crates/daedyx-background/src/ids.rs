@@ -9,7 +9,7 @@ pub struct AppIds {
     pub aumid: &'static str,
     /// Name des Werts unter `HKCU\...\Run`.
     pub run_value: &'static str,
-    /// Anfang des Pipe-Namens der Einzelinstanz (dahinter ein Hash des Benutzers).
+    /// Anfang des Pipe-Namens der Einzelinstanz (dahinter die SID des Benutzers).
     pub pipe_prefix: &'static str,
 }
 
@@ -23,22 +23,12 @@ pub const AUMID_NAME_VALUE: &str = "DisplayName";
 /// Versteckt starten (Autostart).
 pub const HIDDEN_ARG: &str = "--hidden";
 
-/// FNV-1a: stabil über Programmversionen hinweg (anders als `DefaultHasher`).
-pub fn fnv1a(bytes: &[u8]) -> u64 {
-    let mut h: u64 = 0xcbf2_9ce4_8422_2325;
-    for b in bytes {
-        h ^= u64::from(*b);
-        h = h.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    h
-}
-
-/// Name der benannten Pipe je Benutzer. Der Benutzername steht nicht im Klartext darin.
+/// Name der benannten Pipe je Benutzer: `scope` ist die SID (siehe `instance::user_scope`), kein Name und kein Pfad.
+/// Aus `scope` gelangen nur ASCII-Buchstaben, Ziffern und Bindestriche in den Namen.
 pub fn pipe_name(prefix: &str, scope: &str) -> String {
-    format!(r"\\.\pipe\{prefix}-{:016x}", fnv1a(scope.as_bytes()))
-}
-
-/// Unterscheidet Benutzer auf demselben Rechner (Profilpfad, nur gehasht verwendet).
-pub fn user_scope() -> String {
-    std::env::var("USERPROFILE").unwrap_or_default()
+    let scope: String = scope
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .collect();
+    format!(r"\\.\pipe\{prefix}-{scope}")
 }

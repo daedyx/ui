@@ -1,4 +1,6 @@
-//! Einzelinstanz über eine benannte Pipe (Tokio, ohne eigenes `unsafe`; übernommen aus Spike S5).
+//! Einzelinstanz über eine benannte Pipe (Tokio, ohne eigenes `unsafe`; übernommen aus Spike S5). Anlegen und
+//! Verbinden laufen über `daedyx_sys::pipe` (Entscheid T4-7): Rechte nur für den eigenen Benutzer, keine
+//! Fernverbindung, und der zweite Start sendet nur, wenn der Server demselben Benutzer gehört.
 //! Der erste Start legt die Pipe an (`first_pipe_instance`), jeder weitere verbindet sich,
 //! schickt das feste Wort `SHOW` und endet. `QUIT` beendet die laufende Instanz (für Updater/Installer).
 //! Es wird nie ein Inhalt übertragen.
@@ -46,14 +48,15 @@ pub async fn retry_with_pause<T, E>(mut attempt: impl FnMut() -> Result<T, E>) -
 }
 
 #[cfg(windows)]
-pub use win::{Listener, acquire, notify_primary};
+pub use win::{Listener, acquire, notify_primary, user_scope};
 
 #[cfg(windows)]
 mod win {
     use super::*;
+    use daedyx_sys::pipe;
     use std::time::Duration;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    use tokio::net::windows::named_pipe::{ClientOptions, NamedPipeServer, ServerOptions};
+    use tokio::net::windows::named_pipe::NamedPipeServer;
 
     const ERROR_ACCESS_DENIED: i32 = 5;
     const ERROR_PIPE_BUSY: i32 = 231;
@@ -64,28 +67,31 @@ mod win {
         server: NamedPipeServer,
     }
 
+    /// SID des Benutzers für den Pipe-Namen; leer, wenn sie nicht lesbar ist (dann scheitert auch `acquire`).
+    pub fn user_scope() -> String {
+        pipe::user_sid().unwrap_or_default()
+    }
+
     /// Muss innerhalb einer Tokio-Laufzeit aufgerufen werden.
     pub fn acquire(name: &str) -> io::Result<Role> {
-        let created = ServerOptions::new()
-            .first_pipe_instance(true)
-            .reject_remote_clients(true)
-            .create(name);
-        match created {
+        match pipe::create_server(name, true) {
             Ok(server) => Ok(Role::Primary(Listener {
                 name: name.to_string(),
                 server,
             })),
-            // Pipe existiert schon: ein anderer Prozess hält sie.
+            // Pipe existiert schon: ein anderer Prozess hält sie. Ob er demselben Benutzer gehört, prüft erst
+            // `notify_primary`; gehört sie einem anderen Konto, endet der Start mit einem Fehler statt zu senden.
             Err(e) if e.raw_os_error() == Some(ERROR_ACCESS_DENIED) => Ok(Role::Secondary),
             Err(e) => Err(e),
         }
     }
 
-    /// Weckt die erste Instanz. Wartet höchstens etwa zwei Sekunden.
+    /// Weckt die erste Instanz. Wartet höchstens etwa zwei Sekunden. Gehört der Server nicht demselben Benutzer,
+    /// wird nichts gesendet (`PermissionDenied`).
     pub async fn notify_primary(name: &str, word: &[u8]) -> io::Result<()> {
         let mut client = None;
         for _ in 0..40 {
-            match ClientOptions::new().open(name) {
+            match pipe::open_client(name) {
                 Ok(c) => {
                     client = Some(c);
                     break;
@@ -130,11 +136,9 @@ mod win {
         }
     }
 
-    /// Weitere Instanz derselben Pipe, nur für Verbindungen auf diesem Rechner.
+    /// Weitere Instanz derselben Pipe, mit denselben Rechten, nur für Verbindungen auf diesem Rechner.
     fn create(name: &str) -> io::Result<NamedPipeServer> {
-        ServerOptions::new()
-            .reject_remote_clients(true)
-            .create(name)
+        pipe::create_server(name, false)
     }
 
     /// Liest bis zum Auflegen des Clients (auch in Stücken), höchstens `MAX_MESSAGE` Bytes und `READ_LIMIT` lang.
@@ -157,7 +161,7 @@ mod win {
 }
 
 #[cfg(not(windows))]
-pub use other::{Listener, acquire, notify_primary};
+pub use other::{Listener, acquire, notify_primary, user_scope};
 
 /// Auf anderen Systemen noch nicht gebaut (Mac: Unix-Socket im App-Ordner, siehe Bericht Spike S5). Das Modul wird
 /// auf jedem System übersetzt, damit Clippy es auch in der Windows-CI prüft; benutzt wird es nur außerhalb von Windows.
@@ -166,6 +170,10 @@ pub mod other {
 
     #[derive(Debug)]
     pub struct Listener;
+
+    pub fn user_scope() -> String {
+        String::new()
+    }
 
     pub fn acquire(_name: &str) -> io::Result<Role<Listener>> {
         Ok(Role::Primary(Listener))

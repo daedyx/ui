@@ -70,7 +70,7 @@ pub fn probe_toast(app: &AppIds, display_name: &str, title: &str, body: &str) ->
     }
 }
 
-/// Pipe-Name dieses Benutzers.
+/// Pipe-Name dieses Benutzers (mit seiner SID, Entscheid T4-7).
 pub fn pipe(app: &AppIds) -> String {
-    ids::pipe_name(app.pipe_prefix, &ids::user_scope())
+    ids::pipe_name(app.pipe_prefix, &crate::instance::user_scope())
 }
