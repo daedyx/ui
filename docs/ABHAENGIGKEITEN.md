@@ -1,8 +1,9 @@
 # Abhängigkeiten
 
 Jede direkte Abhängigkeit steht hier mit Zweck, Lizenz und Grund. Seit Tasks T1b kommen die Bibliotheken des
-Hintergrundbetriebs dazu (aus Desk, gleiche Fassungen, nichts heruntergeladen); `daedyx-sys` und `daedyx-build` haben
-keine Abhängigkeiten. Versionen sind in `Cargo.toml`
+Hintergrundbetriebs dazu (aus Desk, gleiche Fassungen, nichts heruntergeladen); `daedyx-build` hat keine
+Abhängigkeiten, `daedyx-sys` seit U2 nur `sha2`. Mit U2 kommt `daedyx-updater` (Update in der App) mit Kern-Bibliothek,
+ureq und rustls dazu, alles aus dem lokalen Cargo-Cache. Versionen sind in `Cargo.toml`
 festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 
 | Crate | Version | Lizenz | Wofür | Warum diese |
@@ -20,6 +21,10 @@ festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 | winreg | 0.56.0 | MIT | Autostart und App-Kennung unter HKCU (`daedyx-background`, nur Windows) | Fassung wie in Desk |
 | windows | 0.62.2 | MIT OR Apache-2.0 | Info-Center zählen und leeren (`daedyx-background`, nur Windows) | Fassung wie in Desk; nur die drei nötigen Merkmale |
 | tokio (weitere Merkmale) | 1.54.1 | MIT | Pipe der Einzelinstanz in `daedyx-background`: `rt-multi-thread`, `time`, `net`, `io-util` | gleiche Fassung, nur Merkmale dazu (wie Desk) |
+| daedyx-update | Tag `daedyx-update-v0.1.0` | MIT | Update-Prüfung in `daedyx-updater` (U2): Nachweis, Eintrag, Version, Download, Sperre, Zustand | eigenes Repo `daedyx/core`, Review U1-R bestanden, Ja des Betreuers 2026-11-26; bringt `attestation-verify` 0.1.0 und `x509-cert` 0.3.1 mit (Kern U-A1, U-A2) |
+| ureq | 3.5.2 | MIT OR Apache-2.0 | Netz der Update-Suche (`daedyx-updater::net`, U2), nur `https`, ohne eigene Weiterleitungen | Fassung wie im Launcher (dort schon eingetragen); Merkmal nur `rustls` (ohne gzip, Cookies, JSON). Liegt seit 2026-11-13 im Cargo-Cache; das genaue Veröffentlichungsdatum war offline nicht prüfbar (Alter-Regel: mindestens 13 Tage belegt) |
+| rustls / ring / webpki-roots | 0.23.46 / 0.17.14 / 1.0.12 | Apache-2.0 OR ISC OR MIT / Apache-2.0 AND ISC / CDLA-Permissive-2.0 | TLS der Update-Suche über ureq; Wurzelzertifikate eingebaut (kein Zugriff auf den Zertifikatsspeicher) | rustls und ring stehen in Tasks schon im Baum (gleiche Fassungen); `CDLA-Permissive-2.0` ist in `deny.toml` bereits erlaubt |
+| sha2 | 0.11.1 | MIT OR Apache-2.0 | `daedyx-sys::start_verified`: zweite Prüfsumme über den gesperrten Griff (U2) | dieselbe Fassung wie in `daedyx-update` |
 
 Nicht genommen: eframe-Merkmal `system_fonts` (egui sucht dann selbst Ersatzschriften im System) –
 bringt eine weitere Abhängigkeit; für Deutsch, Englisch und Französisch reichen Systemschrift und

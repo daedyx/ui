@@ -5,6 +5,7 @@ members = [
   "crates/daedyx-tasks-ui",
   "crates/daedyx-background",
   "crates/daedyx-sys",
+  "crates/daedyx-updater",
   "crates/daedyx-build",
   "crates/daedyx-galerie",
   "xtask",

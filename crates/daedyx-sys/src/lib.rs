@@ -2,7 +2,9 @@
 //! Stelle mit `unsafe` (SICHERHEIT.md 2.1); jede Stelle trägt eine `// SAFETY:`-Begründung.
 use std::path::Path;
 
+mod install;
 mod process;
+pub use install::{StartError, start_verified};
 pub use process::{RunEnd, run_with_limit};
 
 /// Freier Platz auf dem Laufwerk eines Ordners (nur Windows; sonst keine Messung, die Kopie selbst meldet

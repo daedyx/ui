@@ -8,7 +8,8 @@
 ; Bildet nach, was der Daedyx Launcher und der Tauri-Updater erwarten:
 ;   Launcher:  setup.exe /S /D=<Ordner>          Deinstallation: <Ordner>\uninstall.exe /S _?=<Ordner>
 ;              app.json {"version","exe"} im Installationsordner, Uninstall-Eintrag unter HKCU (registryKey)
-;   Updater:   setup.exe /P /UPDATE [/R /ARGS <Argumente>]   (installMode "passive" der Tauri-App 0.7.0)
+;   Updater:   setup.exe /P /UPDATE [/R /ARGS <Argumente>]   (installMode "passive" der Tauri-App 0.7.0; seit U2
+;              ruft die egui-App ihr geprüftes Setup genauso auf: daedyx-updater::install, /ARGS --hidden)
 ; Weitere Schalter: /NS (keine Verknüpfung). Nur pro Benutzer (HKCU, keine Adminrechte).
 ; Probe: vorlage/installer/installer-probe.ps1 (still in Wegwerf-Ordner, Startprobe, Deinstallation, Restsuche).
 
@@ -105,12 +106,38 @@ Function SkipIfPassive
   ${EndIf}
 FunctionEnd
 
+; Wartet höchstens 10 s (50 × 200 ms), bis die App ihr Programm freigegeben hat (Update U2: Die App startet dieses
+; Setup selbst und beendet sich danach). Frei heißt: Die Datei lässt sich zum Schreiben öffnen, solange sie läuft
+; nicht. ABORT 1: Bleibt sie belegt, bricht das Setup mit Meldung und Rückgabe 5 ab, statt halb zu überschreiben
+; (auch still: /SD). ABORT 0 (Deinstallation): nur warten.
+!macro WaitForExeFree ABORT
+  StrCpy $R9 0
+  ${Do}
+    ClearErrors
+    FileOpen $R8 "$INSTDIR\${EXE}" a
+    ${IfNot} ${Errors}
+      FileClose $R8
+      ${Break}
+    ${EndIf}
+    IntOp $R9 $R9 + 1
+    ${If} $R9 >= 50
+      !if "${ABORT}" == "1"
+        MessageBox MB_ICONSTOP|MB_OK "${PRODUCT} läuft noch und ließ sich nicht beenden. Es wurde nichts geändert. Bitte schließe ${PRODUCT} und starte das Setup erneut." /SD IDOK
+        SetErrorLevel 5
+        Quit
+      !endif
+      ${Break}
+    ${EndIf}
+    Sleep 200
+  ${Loop}
+!macroend
+
 Section "${PRODUCT}" SecMain
-  ; Laufende App sauber beenden (Pipe-Wort QUIT, M7b), damit die Datei ersetzt werden kann.
+  ; Laufende App sauber beenden (Pipe-Wort QUIT, M7b) und warten, bis die Datei ersetzt werden kann.
   ${If} ${FileExists} "$INSTDIR\${EXE}"
     nsExec::Exec '"$INSTDIR\${EXE}" --quit-running'
     Pop $0
-    Sleep 500
+    !insertmacro WaitForExeFree 1
   ${EndIf}
   SetOutPath "$INSTDIR"
   File "${SRCDIR}\${EXE}"
@@ -162,7 +189,7 @@ Section "Uninstall"
   ${If} ${FileExists} "$INSTDIR\${EXE}"
     nsExec::Exec '"$INSTDIR\${EXE}" --quit-running'
     Pop $0
-    Sleep 500
+    !insertmacro WaitForExeFree 0
     nsExec::Exec '"$INSTDIR\${EXE}" --cleanup'
     Pop $0
   ${EndIf}

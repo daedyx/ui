@@ -1,0 +1,31 @@
+[package]
+name = "daedyx-updater"
+version.workspace = true
+description = "Update in der App (U2): Netz über ureq/rustls nur zu erlaubten Rechnern, Ablauf im eigenen Thread, Setup-Start über daedyx-sys, Bauteil „Updates“ für die Seite „Über“ und die Statuszeile"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Quellordner für den Wächter der App (nur als Entwicklungs-Abhängigkeit).
+lint = []
+
+[dependencies]
+# Prüfen, Laden, Sperre und Zustand (Kern daedyx/core, Tag nach Review U1-R und Ja des Betreuers 2026-11-26).
+daedyx-update = { git = "https://github.com/daedyx/core", tag = "daedyx-update-v0.1.0" }
+daedyx-sys = { path = "../daedyx-sys" }
+daedyx-ui = { path = "../daedyx-ui" }
+eframe = { workspace = true }
+# HTTPS ohne eigene Weiterleitungen (die Regeln stehen in daedyx-update::fetch), TLS über rustls mit ring und den
+# eingebauten Wurzeln (webpki-roots). Ohne gzip, Cookies, JSON. Fassung wie im Launcher (3.5.2).
+ureq = { version = "=3.5.2", default-features = false, features = ["rustls"] }
+
+[dev-dependencies]
+egui_kittest = { workspace = true }
+daedyx-ui = { path = "../daedyx-ui", features = ["lint"] }
+serde_json = { workspace = true }
+sha2 = "0.11"
+hex = "0.4"
