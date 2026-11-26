@@ -43,10 +43,8 @@ fn neuere_version_wird_angeboten_aber_erst_nach_klick_geladen() {
     let ready = u.take_ready().unwrap();
     assert_eq!(std::fs::read(ready.path()).unwrap(), SETUP);
     assert!(
-        ready
-            .path()
-            .starts_with(dir.0.join("daten").join("updates")),
-        "nicht in %TEMP%"
+        ready.path().starts_with(dir.updates()),
+        "lokal, nicht im Datenordner (Roaming) und nicht in %TEMP%"
     );
     let lock_dir = daedyx_update::lock::shared_lock_dir(&dir.0);
     assert_eq!(
@@ -87,7 +85,7 @@ fn offered(name: &str, release: &Release) -> (TestDir, Updater) {
 }
 
 fn no_setup_left(dir: &TestDir) -> bool {
-    std::fs::read_dir(dir.0.join("daten").join("updates"))
+    std::fs::read_dir(dir.updates())
         .map(|l| l.filter_map(Result::ok).count() == 0)
         .unwrap_or(true)
 }
@@ -128,4 +126,25 @@ fn belegte_sperre_meldet_update_laeuft_bereits() {
     assert!(wait(&mut u, |u| u.status() == &Status::Busy));
     assert!(no_setup_left(&dir));
     drop(held);
+}
+
+#[test]
+fn erneut_versuchen_nach_gescheitertem_start_laedt_neu() {
+    // Review U2-R N-U2-2: Der Knopf erscheint bei StartFailed und muss dann wirklich laden.
+    let r = Release::new("0.2.1");
+    let (dir, mut u) = offered("start-fehler", &r);
+    u.update_now();
+    assert!(wait(&mut u, |u| matches!(u.status(), Status::Ready { .. })));
+    let first = u.take_ready().unwrap();
+    let starter =
+        |_: &std::path::Path, _: &[u8; 32], _: &[&str]| Err(daedyx_sys::StartError::Failed);
+    assert!(first.start_with(false, &starter).is_err());
+    u.set_status(Status::StartFailed);
+    u.update_now();
+    assert!(matches!(u.status(), Status::Downloading { .. }));
+    assert!(wait(&mut u, |u| matches!(u.status(), Status::Ready { .. })));
+    assert!(
+        u.take_ready()
+            .is_some_and(|p| p.path().starts_with(dir.updates()))
+    );
 }

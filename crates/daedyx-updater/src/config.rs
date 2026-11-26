@@ -4,6 +4,7 @@
 use daedyx_update::attest::{AttestError, GithubAttestation, Provenance};
 use daedyx_update::fetch::Transport;
 use daedyx_update::policy::UpdatePolicy;
+use daedyx_update::state::{STATE_FILE, UpdateState};
 use daedyx_update::version::Version;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -19,12 +20,15 @@ pub struct Config {
     pub installed: Version,
     /// Datenordner der App: dort liegt `updates.json`.
     pub data_dir: PathBuf,
-    /// Eigener Ordner für geladene Setups (`<Datenordner>\updates`, nicht `%TEMP%`).
+    /// Eigener Ordner für geladene Setups ([`update_dir`]: lokal, nicht im mitwandernden Datenordner, nicht `%TEMP%`).
     pub update_dir: PathBuf,
     /// Gemeinsamer Sperrordner mit dem Launcher (`daedyx_update::lock::shared_lock_dir`).
     pub lock_dir: PathBuf,
     /// Verzögerung der automatischen Suche nach dem Start (App: zufällig bis [`MAX_AUTO_DELAY`], Tests: 0).
     pub auto_delay: Duration,
+    /// Schalter „Beim Start suchen“, solange es noch keine `updates.json` gibt (Standard an; die Vorschau von Tasks
+    /// setzt aus, Entscheid F-U2-1). Danach gilt, was gespeichert ist.
+    pub auto_check_default: bool,
 }
 
 impl Config {
@@ -39,10 +43,34 @@ impl Config {
             policy,
             installed,
             data_dir: data_dir.to_path_buf(),
-            update_dir: data_dir.join("updates"),
+            update_dir: update_dir(data_dir, local_data),
             lock_dir: daedyx_update::lock::shared_lock_dir(local_data),
             auto_delay: random_delay(MAX_AUTO_DELAY),
+            auto_check_default: true,
         }
+    }
+}
+
+/// Ordner der geladenen Setups: `<lokal>\<Name des Datenordners>\updates` (plan-update-bibliothek 6.2, Review U2-R
+/// N-U2-4). Unter Windows `%LOCALAPPDATA%`, damit ein liegen gebliebenes Setup nicht mit dem servergespeicherten
+/// Profil wandert; `updates.json` bleibt im Datenordner (die höchste gesehene Version wandert mit).
+pub fn update_dir(data_dir: &Path, local_data: &Path) -> PathBuf {
+    match data_dir.file_name() {
+        Some(name) => local_data.join(name).join("updates"),
+        None => data_dir.join("updates"),
+    }
+}
+
+impl Config {
+    /// Zustand beim Start: `updates.json`, wenn es sie gibt (beschädigt: Standard des Kerns); fehlt sie, der Standard
+    /// mit dem Schalter der App.
+    pub(crate) fn initial_state(&self) -> UpdateState {
+        if std::fs::symlink_metadata(self.data_dir.join(STATE_FILE)).is_ok() {
+            return UpdateState::load_or_default(&self.data_dir);
+        }
+        let mut s = UpdateState::default();
+        s.auto_check = self.auto_check_default;
+        s
     }
 }
 

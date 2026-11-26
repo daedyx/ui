@@ -6,5 +6,5 @@
 9 unittests src/lib.rs (daedyx_sys)
 97 unittests src/lib.rs (daedyx_tasks_ui)
 66 unittests src/lib.rs (daedyx_ui)
-26 unittests src/lib.rs (daedyx_updater)
+29 unittests src/lib.rs (daedyx_updater)
 64 unittests src/main.rs (xtask)

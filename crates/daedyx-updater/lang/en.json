@@ -29,5 +29,5 @@
   "update.status.verfuegbar": "Update {version} available",
   "update.status.laedt": "Downloading update",
   "update.status.startet": "Installing update",
-  "update.status.hinweis": "Update: see the About page"
+  "update.status.hinweis": "Update: see Settings"
 }

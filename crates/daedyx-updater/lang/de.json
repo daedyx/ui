@@ -29,5 +29,5 @@
   "update.status.verfuegbar": "Update {version} verfügbar",
   "update.status.laedt": "Update wird geladen",
   "update.status.startet": "Update wird installiert",
-  "update.status.hinweis": "Update: Hinweis auf der Seite Über"
+  "update.status.hinweis": "Update: Hinweis in den Einstellungen"
 }

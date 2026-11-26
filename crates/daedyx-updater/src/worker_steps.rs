@@ -95,10 +95,8 @@ impl Run<'_> {
         match result {
             Ok(path) => {
                 let e = offer.entry();
-                let version = e.version.to_string();
                 let prepared = Prepared::new(path, e.package.sha256, e.version.clone(), lock);
                 self.send(Msg::Ready(Box::new(prepared)));
-                self.status(Status::Ready { version });
             }
             Err(b) => {
                 // Nicht vertrauenswürdig: Angebot verwerfen (nur eine neue Suche bringt ein neues).

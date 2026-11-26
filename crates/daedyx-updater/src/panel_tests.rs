@@ -155,4 +155,10 @@ fn statuszeile_meldet_angebot_und_still_keine_verbindung() {
         (false, false)
     );
     assert!(!badge(Status::Idle, "Update").0);
+    // Review U2-R N-U2-6: keine „Seite Über“ (Tasks zeigt den Abschnitt in den Einstellungen).
+    let hint = "Update: Hinweis in den Einstellungen";
+    assert_eq!(
+        badge(Status::Blocked(BlockKind::NotTrusted), hint),
+        (true, true)
+    );
 }

@@ -7,7 +7,6 @@ use crate::install::Prepared;
 use crate::status::Status;
 use crate::worker_run::run;
 use daedyx_update::reason::BlockKind;
-use daedyx_update::state::UpdateState;
 use eframe::egui::Context;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
@@ -20,6 +19,7 @@ pub(crate) enum Cmd {
 pub(crate) enum Msg {
     Status(Status),
     Auto(bool),
+    /// Geprüftes Setup, zugleich der Status „bereit“; immer die letzte Meldung eines Downloads.
     Ready(Box<Prepared>),
 }
 
@@ -39,7 +39,7 @@ impl Updater {
     pub fn start(config: Config, backend: Backend, ctx: Option<Context>) -> Updater {
         let (tx, cmd_rx) = channel();
         let (msg_tx, rx) = channel();
-        let auto_check = UpdateState::load_or_default(&config.data_dir).auto_check;
+        let auto_check = config.initial_state().auto_check;
         let source = config.policy.expected_source();
         let spawned = std::thread::Builder::new()
             .name("daedyx-update".into())
@@ -70,12 +70,32 @@ impl Updater {
     /// Meldungen abholen (jedes Bild).
     pub fn poll(&mut self) {
         let Some(rx) = &self.rx else { return };
-        while let Ok(msg) = rx.try_recv() {
-            match msg {
-                Msg::Status(s) => self.status = s,
-                Msg::Auto(on) => self.auto_check = on,
-                Msg::Ready(p) => self.ready = Some(*p),
+        let msgs: Vec<Msg> = rx.try_iter().collect();
+        for msg in msgs {
+            self.apply(msg);
+        }
+    }
+
+    fn apply(&mut self, msg: Msg) {
+        match msg {
+            Msg::Status(s) => self.status = s,
+            Msg::Auto(on) => self.auto_check = on,
+            // Bereit setzt den Status mit; danach kommt keine Statusmeldung mehr, die ein StartFailed der App
+            // überschreiben könnte (Review U2-R N-U2-3).
+            Msg::Ready(p) => {
+                self.status = Status::Ready {
+                    version: p.version().to_string(),
+                };
+                self.ready = Some(*p);
             }
+        }
+    }
+
+    /// Meldungen ohne Kanal verarbeiten (Tests der Reihenfolge).
+    #[cfg(test)]
+    pub(crate) fn feed(&mut self, msgs: Vec<Msg>) {
+        for m in msgs {
+            self.apply(m);
         }
     }
 
@@ -112,10 +132,12 @@ impl Updater {
 
     /// Knopf „Jetzt aktualisieren“ (lädt, prüft; danach holt die App das Setup mit [`Updater::take_ready`]).
     pub fn update_now(&mut self) {
-        // „Erneut“ nur, wo das Angebot noch gilt (abgebrochen, Platz, eigene Datei); sonst neu suchen.
+        // „Erneut“ nur, wo das Angebot noch gilt (abgebrochen, Platz, eigene Datei, Setup startete nicht: das Angebot
+        // liegt im Ablauf noch vor, Review U2-R N-U2-2); sonst neu suchen.
         let retry = matches!(
             self.status,
             Status::Blocked(BlockKind::Interrupted | BlockKind::NoSpace | BlockKind::LocalFile)
+                | Status::StartFailed
         );
         if retry || matches!(self.status, Status::Available { .. }) {
             self.status = Status::Downloading { done: 0, total: 0 };

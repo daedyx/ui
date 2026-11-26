@@ -6,7 +6,7 @@
 //! - [`worker::Updater`]: Ablauf im eigenen Thread (Suche, Download nach Klick, Schalter „Beim Start suchen“,
 //!   höchstens einmal am Tag), Meldungen über einen Kanal, keine Sperren im Speicher.
 //! - [`install::Prepared`]: geprüftes Setup mit gehaltener Sperre, Start mit festen Argumenten über `daedyx-sys`.
-//! - [`panel`]: Bauteil für die Seite „Über“ und den Hinweis in der Statuszeile; Texte aus `lang/*.json`.
+//! - [`panel`]: Bauteil „Updates“ für die Einstellungen der App und den Hinweis in der Statuszeile; Texte aus `lang/*.json`.
 //!
 //! Kein stilles Installieren: Das Setup startet nur nach dem Klick auf „Jetzt aktualisieren“.
 pub mod config;

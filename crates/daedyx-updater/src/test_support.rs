@@ -136,11 +136,19 @@ impl TestDir {
         let mut c = Config::new(
             policy(),
             Version::parse(installed).unwrap(),
-            &self.0.join("daten"),
+            &self.data(),
             &self.0,
         );
         c.auto_delay = Duration::ZERO;
         c
+    }
+
+    /// Datenordner (wie `%APPDATA%\<Kennung>`) und erwarteter lokaler Ordner der Setups (`%LOCALAPPDATA%\…\updates`).
+    pub fn data(&self) -> PathBuf {
+        self.0.join("roaming").join("daten")
+    }
+    pub fn updates(&self) -> PathBuf {
+        self.0.join("daten").join("updates")
     }
 }
 
@@ -181,14 +189,13 @@ pub fn wait(u: &mut crate::Updater, done: impl Fn(&crate::Updater) -> bool) -> b
     false
 }
 
-/// Zustand in `updates.json` des Test-Datenordners.
+/// Zustand in `updates.json` des Test-Datenordners: lesen und setzen.
 pub fn saved(dir: &TestDir) -> daedyx_update::state::UpdateState {
-    daedyx_update::state::UpdateState::load(&dir.0.join("daten")).unwrap()
+    daedyx_update::state::UpdateState::load(&dir.data()).unwrap()
 }
-
 pub fn set_state(dir: &TestDir, auto: bool, last: Option<i64>) {
     let mut s = daedyx_update::state::UpdateState::default();
     s.auto_check = auto;
     s.last_check = last;
-    s.save(&dir.0.join("daten")).unwrap();
+    s.save(&dir.data()).unwrap();
 }

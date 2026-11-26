@@ -98,7 +98,7 @@ pub(crate) fn run(
     out: &Sender<Msg>,
     ctx: Option<&Context>,
 ) {
-    let state = UpdateState::load_or_default(&config.data_dir);
+    let state = config.initial_state();
     let mut run = Run {
         config,
         backend,

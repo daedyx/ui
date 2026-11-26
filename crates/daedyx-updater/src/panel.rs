@@ -1,4 +1,4 @@
-//! Bauteil „Updates“ für die Seite „Über“ (Stil 1) und der Hinweis in der Statuszeile. Die Notiz erscheint als reiner
+//! Bauteil „Updates“ für den Abschnitt der App (Tasks: Einstellungen › Updates; Stil 1) und der Hinweis in der Statuszeile. Die Notiz erscheint als reiner
 //! Text, ohne Links und ohne Markdown. Farben nur aus den Tokens, Texte nur aus `lang/*.json`.
 use crate::install::supported;
 use crate::status::{Status, block_key};
@@ -129,7 +129,7 @@ pub fn show(ui: &mut Ui, updater: &mut Updater, t: &Texts) {
     );
 }
 
-/// Hinweis in der Statuszeile, solange es etwas zu sagen gibt (Angebot, Laden, Sperre). Klick: zur Seite „Über“.
+/// Hinweis in der Statuszeile, solange es etwas zu sagen gibt (Angebot, Laden, Sperre). Klick: Die App öffnet den Abschnitt.
 pub fn status_badge(ui: &mut Ui, updater: &Updater, t: &Texts) -> Option<Response> {
     let (tone, text) = match updater.status() {
         Status::Idle | Status::Checking | Status::UpToDate => return None,

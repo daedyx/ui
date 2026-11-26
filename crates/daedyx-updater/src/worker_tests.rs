@@ -5,6 +5,8 @@ use crate::status::Status;
 use crate::test_support::{
     Fake, NOW, Release, SETUP_URL, TestDir, backend, policy, saved, set_state, wait,
 };
+use crate::worker::Msg;
+use crate::worker_run::Run;
 use daedyx_update::fetch::TransportError;
 use daedyx_update::reason::BlockKind;
 use daedyx_update::state::UpdateState;
@@ -52,7 +54,7 @@ fn zuruecksprung_der_quelle_wird_gemeldet() {
     let mut s = UpdateState::default();
     s.auto_check = false;
     s.note_seen(&Version::new(0, 3, 0));
-    s.save(&dir.0.join("daten")).unwrap();
+    s.save(&dir.data()).unwrap();
     let r = Release::new("0.2.1");
     let (b, _seen) = backend(r.routes(), r.trusted.clone());
     let mut u = Updater::start(dir.config("0.2.0"), b, None);
@@ -100,7 +102,7 @@ fn schalter_wird_in_updates_json_gespeichert() {
     let (b, _seen) = backend(BTreeMap::new(), Default::default());
     let mut u = Updater::start(dir.config("0.2.0"), b, None);
     u.set_auto_check(false);
-    assert!(wait(&mut u, |_| UpdateState::load(&dir.0.join("daten"))
+    assert!(wait(&mut u, |_| UpdateState::load(&dir.data())
         .is_ok_and(|s| !s.auto_check)));
     assert!(!u.auto_check());
 }
@@ -109,7 +111,7 @@ fn schalter_wird_in_updates_json_gespeichert() {
 fn alte_reste_im_update_ordner_werden_beim_start_geraeumt() {
     let dir = TestDir::new("reste");
     set_state(&dir, false, None);
-    let updates = dir.0.join("daten").join("updates");
+    let updates = dir.updates();
     std::fs::create_dir_all(&updates).unwrap();
     for f in ["probe-0.1.0-setup.exe", "probe-0.2.1-setup.exe.part"] {
         std::fs::write(updates.join(f), b"alt").unwrap();
@@ -122,4 +124,70 @@ fn alte_reste_im_update_ordner_werden_beim_start_geraeumt() {
         .count()
         == 1));
     assert!(updates.join("fremd.txt").exists());
+}
+
+#[test]
+fn nach_dem_bereit_kommt_keine_statusmeldung_mehr() {
+    // Review U2-R N-U2-3: Eine späte Statusmeldung darf das StartFailed der App nicht überschreiben.
+    let dir = TestDir::new("reihenfolge");
+    set_state(&dir, false, None);
+    let r = Release::new("0.2.1");
+    let (b, _seen) = backend(r.routes(), r.trusted.clone());
+    let config = dir.config("0.2.0");
+    let (out, rx) = std::sync::mpsc::channel();
+    let mut run = Run {
+        config: &config,
+        backend: b,
+        out: &out,
+        ctx: None,
+        state: UpdateState::default(),
+        offer: None,
+    };
+    run.check();
+    run.download();
+    let msgs: Vec<Msg> = rx.try_iter().collect();
+    assert!(
+        matches!(msgs.last(), Some(Msg::Ready(_))),
+        "Bereit ist die letzte Meldung"
+    );
+    let mut u = Updater::disabled();
+    u.feed(msgs);
+    assert_eq!(
+        u.status(),
+        &Status::Ready {
+            version: "0.2.1".into()
+        }
+    );
+    assert!(u.take_ready().is_some());
+    u.set_status(Status::StartFailed);
+    u.feed(Vec::new());
+    assert_eq!(u.status(), &Status::StartFailed);
+}
+
+#[test]
+fn ohne_updates_json_gilt_der_standard_der_app() {
+    // Entscheid F-U2-1: Die Vorschau sucht nicht von selbst, bis jemand den Schalter einschaltet.
+    let r = Release::new("0.2.1");
+    let dir = TestDir::new("standard-aus");
+    let mut config = dir.config("0.2.0");
+    config.auto_check_default = false;
+    let (b, seen) = backend(r.routes(), r.trusted.clone());
+    let mut u = Updater::start(config, b, None);
+    std::thread::sleep(Duration::from_millis(300));
+    u.poll();
+    assert!(!u.auto_check());
+    assert_eq!(u.status(), &Status::Idle);
+    assert_eq!(seen.try_iter().count(), 0, "keine Anfrage");
+    // Gespeichertes gewinnt: eingeschaltet ist eingeschaltet.
+    let dir = TestDir::new("standard-gespeichert");
+    set_state(&dir, true, None);
+    let mut config = dir.config("0.2.0");
+    config.auto_check_default = false;
+    let (b, _seen) = backend(r.routes(), r.trusted.clone());
+    let mut u = Updater::start(config, b, None);
+    assert!(u.auto_check());
+    assert!(wait(&mut u, |u| matches!(
+        u.status(),
+        Status::Available { .. }
+    )));
 }

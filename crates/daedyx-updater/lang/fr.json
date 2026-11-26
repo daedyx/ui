@@ -29,5 +29,5 @@
   "update.status.verfuegbar": "Mise à jour {version} disponible",
   "update.status.laedt": "Téléchargement de la mise à jour",
   "update.status.startet": "Installation de la mise à jour",
-  "update.status.hinweis": "Mise à jour : voir la page À propos"
+  "update.status.hinweis": "Mise à jour : voir les paramètres"
 }
