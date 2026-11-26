@@ -13,11 +13,11 @@ nicht mehr erlaubt (kein Paket im Baum braucht sie). Die Nummern bleiben frei.
 
 A-027 kommt mit der Pipe-Härtung (Entscheid T4-7, 2026-11-26) dazu, **Ja des Betreuers 2026-11-26**. Die Zeilen aus der
 Korrekturrunde nach dem Review (N-P1, N-P2, H-P3: `allow` je Funktion, Rechte-Lesen im Programm) brauchen noch das
-**Ja des Betreuers (ausstehend)**.
+**Ja des Betreuers 2026-11-26**.
 
 A-019 bis A-026 kommen mit Tasks T1b (2026-11-25) dazu: `daedyx-sys`, `daedyx-background` und `daedyx-build` sind aus
 Desk herausgelöst. Bis auf A-022 sind es Desk-Ausnahmen, die mit ihrem Code umgezogen sind (in Desk angenommen am
-2026-11-24, dort gestrichen); im ui-Repo stehen sie neu und brauchen deshalb das **Ja des Betreuers (ausstehend)**.
+2026-11-24, dort gestrichen); im ui-Repo stehen sie neu und haben das **Ja des Betreuers 2026-11-25**.
 
 | Nr. | Datei | Regel | Grund | Entscheid von | Datum | Ablauf |
 |---|---|---|---|---|---|---|
