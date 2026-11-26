@@ -11,7 +11,8 @@
 //! Kein stilles Installieren: Das Setup startet nur nach dem Klick auf „Jetzt aktualisieren“.
 pub mod config;
 pub mod install;
-pub mod net;
+/// Echtes Netz aus dem Kern (Merkmal `net`, U3 F-U3-1): dieselbe Datei wie im Launcher, keine Abschrift mehr.
+pub use daedyx_update::net;
 pub mod panel;
 pub mod status;
 pub mod texts;
@@ -34,8 +35,6 @@ mod download_tests;
 mod guard_tests;
 #[cfg(test)]
 mod install_tests;
-#[cfg(test)]
-mod net_tests;
 #[cfg(test)]
 mod panel_tests;
 #[cfg(test)]
