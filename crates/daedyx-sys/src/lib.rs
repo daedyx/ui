@@ -3,6 +3,8 @@
 use std::path::Path;
 
 mod install;
+#[cfg(windows)]
+pub mod pipe;
 mod process;
 pub use install::{StartError, file_sha256, start_verified};
 pub use process::{RunEnd, run_with_limit};

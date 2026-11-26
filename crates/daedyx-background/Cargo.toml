@@ -21,6 +21,8 @@ tokio = { workspace = true, features = ["rt-multi-thread", "time", "net", "io-ut
 tray-icon = { version = "=0.25.1", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
+# Gehärtete Pipe der Einzelinstanz (Rechte nur für den Benutzer, Besitzerprüfung, SID im Namen; Entscheid T4-7).
+daedyx-sys = { path = "../daedyx-sys" }
 # Windows-Benachrichtigungen, Autostart und App-Kennung (nur HKCU). Fassungen wie in Desk.
 tauri-winrt-notification = "=0.8.1"
 winreg = "=0.56.0"

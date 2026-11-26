@@ -25,6 +25,7 @@ festgenagelt (`=x.y.z`) und waren beim Eintragen mindestens 14 Tage alt.
 | ureq | 3.5.2 | MIT OR Apache-2.0 | Netz der Update-Suche (`daedyx-updater::net`, U2), nur `https`, ohne eigene Weiterleitungen | Fassung wie im Launcher (dort schon eingetragen); Merkmal nur `rustls` (ohne gzip, Cookies, JSON). Liegt seit 2026-11-13 im Cargo-Cache; das genaue Veröffentlichungsdatum war offline nicht prüfbar (Alter-Regel: mindestens 13 Tage belegt) |
 | rustls / ring / webpki-roots | 0.23.46 / 0.17.14 / 1.0.12 | Apache-2.0 OR ISC OR MIT / Apache-2.0 AND ISC / CDLA-Permissive-2.0 | TLS der Update-Suche über ureq; Wurzelzertifikate eingebaut (kein Zugriff auf den Zertifikatsspeicher) | rustls und ring stehen in Tasks schon im Baum (gleiche Fassungen); `CDLA-Permissive-2.0` ist in `deny.toml` bereits erlaubt |
 | sha2 | 0.11.1 | MIT OR Apache-2.0 | `daedyx-sys::start_verified`: zweite Prüfsumme über den gesperrten Griff (U2) | dieselbe Fassung wie in `daedyx-update` |
+| tokio (in `daedyx-sys`) | 1.54.1 | MIT | Gehärtete Pipe der Einzelinstanz (Entscheid T4-7): `net`, in den Tests dazu `rt`, `macros`, `time`, `io-util`; nur unter Windows | gleiche Fassung, keine neue Abhängigkeit im Baum |
 
 Nicht genommen: eframe-Merkmal `system_fonts` (egui sucht dann selbst Ersatzschriften im System) –
 bringt eine weitere Abhängigkeit; für Deutsch, Englisch und Französisch reichen Systemschrift und
