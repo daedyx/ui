@@ -4,7 +4,7 @@ use std::path::Path;
 
 mod install;
 mod process;
-pub use install::{StartError, start_verified};
+pub use install::{StartError, file_sha256, start_verified};
 pub use process::{RunEnd, run_with_limit};
 
 /// Freier Platz auf dem Laufwerk eines Ordners (nur Windows; sonst keine Messung, die Kopie selbst meldet

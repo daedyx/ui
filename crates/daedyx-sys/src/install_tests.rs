@@ -29,6 +29,15 @@ fn sha(bytes: &[u8]) -> [u8; 32] {
 }
 
 #[test]
+fn the_checksum_of_a_file_is_its_sha256() {
+    let dir = Dir::new("pruefsumme");
+    let file = dir.0.join("datei.bin");
+    std::fs::write(&file, b"erfundener Inhalt").unwrap();
+    assert_eq!(file_sha256(&file), Some(sha(b"erfundener Inhalt")));
+    assert_eq!(file_sha256(&dir.0.join("fehlt.bin")), None);
+}
+
+#[test]
 fn a_missing_setup_is_not_started() {
     let dir = Dir::new("fehlt");
     let end = start_verified(&dir.0.join("gibt-es-nicht-setup.exe"), &[0; 32], &[]);

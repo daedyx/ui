@@ -41,6 +41,24 @@ fn open_read_only_shared(path: &Path) -> std::io::Result<File> {
     File::open(path)
 }
 
+fn digest(file: &mut File) -> Option<[u8; 32]> {
+    let mut hasher = Sha256::new();
+    let mut buf = vec![0u8; 64 * 1024];
+    loop {
+        match file.read(&mut buf) {
+            Ok(0) => return Some(hasher.finalize().into()),
+            Ok(n) => hasher.update(buf.get(..n).unwrap_or_default()),
+            Err(e) if e.kind() == ErrorKind::Interrupted => {}
+            Err(_) => return None,
+        }
+    }
+}
+
+/// SHA-256 einer Datei (`None`, wenn sie sich nicht lesen lässt).
+pub fn file_sha256(path: &Path) -> Option<[u8; 32]> {
+    digest(&mut File::open(path).ok()?)
+}
+
 impl Held {
     /// Öffnet `path` gesperrt und prüft die Prüfsumme über den gesperrten Griff.
     pub(crate) fn open(path: &Path, sha256: &[u8; 32]) -> Result<Held, StartError> {
@@ -48,17 +66,7 @@ impl Held {
             ErrorKind::NotFound => StartError::Missing,
             _ => StartError::Failed,
         })?;
-        let mut hasher = Sha256::new();
-        let mut buf = vec![0u8; 64 * 1024];
-        loop {
-            match file.read(&mut buf) {
-                Ok(0) => break,
-                Ok(n) => hasher.update(buf.get(..n).unwrap_or_default()),
-                Err(e) if e.kind() == ErrorKind::Interrupted => {}
-                Err(_) => return Err(StartError::Failed),
-            }
-        }
-        let got: [u8; 32] = hasher.finalize().into();
+        let got = digest(&mut file).ok_or(StartError::Failed)?;
         if &got == sha256 {
             Ok(Held { _file: file })
         } else {

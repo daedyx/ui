@@ -19,6 +19,10 @@ pub mod worker;
 mod worker_run;
 mod worker_steps;
 
+/// Die Kern-Bibliothek in genau der Fassung, die dieses Crate benutzt (Policy, Version, Sperrgründe), damit die App
+/// keine zweite Kern-Quelle einträgt.
+pub use daedyx_update;
+
 pub use config::{Backend, Config};
 pub use install::Prepared;
 pub use status::Status;
