@@ -18,6 +18,12 @@ A-027 kommt mit der Pipe-Härtung (Entscheid T4-7, 2026-11-26) dazu, **Ja des Be
 Korrekturrunde nach dem Review (N-P1, N-P2, H-P3: `allow` je Funktion, Rechte-Lesen im Programm) brauchen noch das
 **Ja des Betreuers 2026-11-26**.
 
+Zweig `fix-pipe-sid` (2026-11-27, Release-Lauf 1): Die Rechte der Pipe werden über die SIDs selbst verglichen, nicht
+mehr über SDDL-Text (der kürzt das eingebaute Administratorkonto `…-500` zu „LA“, die eigene Pipe galt dann als fremd).
+Neu ist `pipe_acl.rs` (Besitzer und Zugriffsliste lesen); `security_text` und das SDDL-Lesen liegen nur noch in der
+Prüfhilfe `pipe_probe.rs` (nur Tests), `create_with_sddl` holt die Beschreibung über `descriptor`. Diese Zeilen
+brauchen noch das **Ja des Betreuers**.
+
 A-019 bis A-026 kommen mit Tasks T1b (2026-11-25) dazu: `daedyx-sys`, `daedyx-background` und `daedyx-build` sind aus
 Desk herausgelöst. Bis auf A-022 sind es Desk-Ausnahmen, die mit ihrem Code umgezogen sind (in Desk angenommen am
 2026-11-24, dort gestrichen); im ui-Repo stehen sie neu und haben das **Ja des Betreuers 2026-11-25**.
@@ -58,7 +64,7 @@ Desk herausgelöst. Bis auf A-022 sind es Desk-Ausnahmen, die mit ihrem Code umg
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`Local::wide_text`) | wie A-027: Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`owned`) | wie A-027: Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`process_user_sid`) | wie A-027: Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
-| A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`security_text`) | wie A-027: Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`descriptor`) | wie A-027: Freigabe nur für diese Funktion (Sicherheitsbeschreibung aus der Vorlage, aus `create_with_sddl` herausgelöst) | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe_code (`create_with_sddl`) | wie A-027: Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`unsafe extern "system"`) | wie A-027: Erklärung der Windows-Funktionen (kernel32, advapi32) | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`LocalFree` in `Local::drop`) | wie A-027: gibt vom System zugeteilten Speicher genau einmal frei | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
@@ -70,10 +76,27 @@ Desk herausgelöst. Bis auf A-022 sind es Desk-Ausnahmen, die mit ihrem Code umg
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`GetTokenInformation`) | wie A-027: Benutzer-SID des Tokens in einen festen, ausgerichteten Puffer | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (SID-Zeiger lesen) | wie A-027: erstes Feld von TOKEN_USER aus diesem Puffer | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`ConvertSidToStringSidW`) | wie A-027: SID als Text | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
-| A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`GetSecurityInfo`) | wie A-027: Besitzer bzw. Besitzer und Zugriffsliste eines Pipe-Handles lesen (Besitzerprüfung, Instanzprüfung); vorher nur in den Prüfhilfen | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
-| A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`ConvertSecurityDescriptorToStringSecurityDescriptorW`) | wie A-027: diese Teile als Text zum Vergleich; vorher nur in den Prüfhilfen | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe (`GetSecurityInfo`, nur Tests) | wie A-027 (Prüfhilfen): Rechte einer Pipe als SDDL-Text für die Gegenproben; im Programm liest sie `pipe_acl.rs` | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe (`ConvertSecurityDescriptorToStringSecurityDescriptorW`, nur Tests) | wie A-027 (Prüfhilfen): diese Teile als SDDL-Text, auch der Beleg für „LA“ | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`ConvertStringSecurityDescriptorToSecurityDescriptorW`) | wie A-027: Sicherheitsbeschreibung aus fester Vorlage mit geprüfter SID | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_ffi.rs | unsafe (`create_with_security_attributes_raw`) | wie A-027: tokio legt die Pipe mit dieser Beschreibung an | Bau-Chat Pipe, Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe_code (`security_text`, nur Tests) | wie A-027 (Prüfhilfen): Freigabe nur für diese Funktion, aus `pipe_ffi.rs` hierher | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe_code (`descriptor_text`, nur Tests) | wie A-027 (Prüfhilfen): Freigabe nur für diese Funktion | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe_code (`extern`-Block) | Pipe-Härtung, Vergleich über SIDs (Release-Lauf 1): Besitzer und Zugriffsliste einer Sicherheitsbeschreibung lesen, jede SID in voller Textform (`ConvertSidToStringSidW`), nie als SDDL-Kürzel. `allow` je Funktion (Review H-P3) | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe_code (`of_object`) | wie oben: Freigabe nur für diese Funktion | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe_code (`of_descriptor`) | wie oben: Freigabe nur für diese Funktion | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe_code (`rules`) | wie oben: Freigabe nur für diese Funktion | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe_code (`sid_text`) | wie oben: Freigabe nur für diese Funktion | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`unsafe extern "system"`) | wie oben: Erklärung der Windows-Funktionen (advapi32) | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetSecurityInfo`) | wie oben: Besitzer bzw. Besitzer und Zugriffsliste eines Pipe-Handles (Besitzerprüfung, Instanzprüfung) | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetSecurityDescriptorOwner`) | wie oben: Zeiger auf den Besitzer in der lebenden Beschreibung | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetSecurityDescriptorControl`) | wie oben: Schalter der Zugriffsliste (geschützt, geerbt) | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetSecurityDescriptorDacl`) | wie oben: Zeiger auf die Zugriffsliste in der lebenden Beschreibung | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetAclInformation`) | wie oben: Anzahl der Regeln in eine lokale Struktur | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`GetAce`) | wie oben: Zeiger auf eine Regel, Nummer unter der Anzahl | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (Kopf einer Regel lesen) | wie oben: 4 Byte Art, Schalter, Größe | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (Maske einer Regel lesen) | wie oben: nur bei „erlauben“ und mindestens 16 Byte Größe | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
+| A-027 | crates/daedyx-sys/src/pipe_acl.rs | unsafe (`ConvertSidToStringSidW`) | wie oben: SID als volle Textform | Bau-Chat fix-pipe-sid, **Ja des Betreuers ausstehend** | 2026-11-27 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe_code (`extern`-Block, nur Tests) | Prüfhilfe nur für die Tests von A-027: als anonymes Konto handeln (Gegenprobe „fremdes Konto abgewiesen“). Wird nur mit `cfg(test)` übersetzt, ist nicht im Programm. `allow` je Funktion (Review H-P3). | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe_code (`Revert::drop`, nur Tests) | wie A-027 (Prüfhilfe): Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |
 | A-027 | crates/daedyx-sys/src/pipe_probe.rs | unsafe_code (`as_anonymous`, nur Tests) | wie A-027 (Prüfhilfe): Freigabe nur für diese Funktion | Bau-Chat Pipe (Korrektur), Ja des Betreuers 2026-11-26 | 2026-11-26 | 2027-05-31 |

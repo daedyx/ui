@@ -10,7 +10,6 @@ const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
 const TOKEN_QUERY: u32 = 0x0008;
 const TOKEN_USER_CLASS: i32 = 1;
 const SDDL_REVISION_1: u32 = 1;
-const SE_KERNEL_OBJECT: i32 = 6;
 /// `OWNER_SECURITY_INFORMATION`: nur der Besitzer.
 pub(super) const OWNER: u32 = 0x1;
 /// Besitzer und Zugriffsliste (`OWNER_` und `DACL_SECURITY_INFORMATION`).
@@ -41,23 +40,6 @@ unsafe extern "system" {
         text: *const u16,
         revision: u32,
         sd: *mut *mut c_void,
-        len: *mut u32,
-    ) -> i32;
-    fn GetSecurityInfo(
-        handle: RawHandle,
-        kind: i32,
-        what: u32,
-        owner: *mut *mut c_void,
-        group: *mut *mut c_void,
-        dacl: *mut *mut c_void,
-        sacl: *mut *mut c_void,
-        sd: *mut *mut c_void,
-    ) -> u32;
-    fn ConvertSecurityDescriptorToStringSecurityDescriptorW(
-        sd: *mut c_void,
-        revision: u32,
-        what: u32,
-        text: *mut *mut u16,
         len: *mut u32,
     ) -> i32;
     fn LocalFree(mem: *mut c_void) -> *mut c_void;
@@ -144,52 +126,9 @@ pub(super) fn process_user_sid(pid: u32) -> io::Result<String> {
     Local(text.cast()).wide_text()
 }
 
-/// Teile `what` (`OWNER` oder `OWNER_AND_DACL`) der Sicherheitsbeschreibung eines Kernel-Objekts als SDDL-Text.
+/// Sicherheitsbeschreibung aus SDDL-Text, vom System zugeteilt.
 #[allow(unsafe_code, reason = "SICHERHEIT-AUSNAHMEN A-027")]
-pub(super) fn security_text(object: &impl AsRawHandle, what: u32) -> io::Result<String> {
-    use std::ptr::null_mut;
-    let mut sd = null_mut();
-    // SAFETY: Das Handle gehört dem lebenden `object`, `sd` ist ein lokaler Ausgabewert.
-    let err = unsafe {
-        GetSecurityInfo(
-            object.as_raw_handle(),
-            SE_KERNEL_OBJECT,
-            what,
-            null_mut(),
-            null_mut(),
-            null_mut(),
-            null_mut(),
-            &mut sd,
-        )
-    };
-    if err != 0 {
-        return Err(io::Error::from_raw_os_error(
-            i32::try_from(err).unwrap_or(i32::MAX),
-        ));
-    }
-    let sd = Local(sd);
-    let mut text = null_mut();
-    // SAFETY: `sd` ist eine gültige Beschreibung, `text` ist ein lokaler Ausgabewert.
-    check(unsafe {
-        ConvertSecurityDescriptorToStringSecurityDescriptorW(
-            sd.0,
-            SDDL_REVISION_1,
-            what,
-            &mut text,
-            null_mut(),
-        )
-    })?;
-    Local(text.cast()).wide_text()
-}
-
-/// Legt eine Pipe-Instanz mit der Sicherheitsbeschreibung `sddl` an. Gibt es den Namen schon, erbt die Instanz die
-/// Rechte der bestehenden Pipe; das prüft erst der Aufrufer (`pipe::create_server`).
-#[allow(unsafe_code, reason = "SICHERHEIT-AUSNAHMEN A-027")]
-pub(super) fn create_with_sddl(
-    options: &ServerOptions,
-    name: &str,
-    sddl: &str,
-) -> io::Result<NamedPipeServer> {
+pub(super) fn descriptor(sddl: &str) -> io::Result<Local> {
     let text = wide(sddl);
     let mut sd = std::ptr::null_mut();
     // SAFETY: `text` ist nullterminiert und lebt über den Aufruf; `sd` ist ein lokaler Ausgabewert.
@@ -201,7 +140,18 @@ pub(super) fn create_with_sddl(
             std::ptr::null_mut(),
         )
     })?;
-    let sd = Local(sd);
+    Ok(Local(sd))
+}
+
+/// Legt eine Pipe-Instanz mit der Sicherheitsbeschreibung `sddl` an. Gibt es den Namen schon, erbt die Instanz die
+/// Rechte der bestehenden Pipe; das prüft erst der Aufrufer (`pipe::create_server`).
+#[allow(unsafe_code, reason = "SICHERHEIT-AUSNAHMEN A-027")]
+pub(super) fn create_with_sddl(
+    options: &ServerOptions,
+    name: &str,
+    sddl: &str,
+) -> io::Result<NamedPipeServer> {
+    let sd = descriptor(sddl)?;
     let mut attrs = SecurityAttributes {
         length: u32::try_from(std::mem::size_of::<SecurityAttributes>()).unwrap_or(0),
         descriptor: sd.0,

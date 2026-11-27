@@ -12,6 +12,8 @@ use tokio::net::windows::named_pipe::{
     ClientOptions, NamedPipeClient, NamedPipeServer, ServerOptions,
 };
 
+#[path = "pipe_acl.rs"]
+mod acl;
 #[path = "pipe_ffi.rs"]
 mod ffi;
 #[cfg(test)]
@@ -66,10 +68,28 @@ pub fn create_server(name: &str, first: bool) -> io::Result<NamedPipeServer> {
     let server = ffi::create_with_sddl(&options, name, &sddl)?;
     // Gibt es den Namen schon, erbt die Instanz die Rechte der bestehenden Pipe, nicht `sddl` (Review N-P2). Trägt
     // sie nicht genau unsere Rechte, wird sie verworfen: nie auf einer fremden Pipe dienen.
-    match ffi::security_text(&server, ffi::OWNER_AND_DACL) {
-        Ok(text) if text == format!("O:{sid}D:P(A;;FA;;;{sid})") => Ok(server),
+    // Verglichen werden die SIDs selbst, nicht SDDL-Text: der kürzt etwa das eingebaute Administratorkonto zu „LA“.
+    match acl::of_object(&server, ffi::OWNER_AND_DACL) {
+        Ok(found) if owner_only(&found, &sid) => Ok(server),
         _ => Err(io::Error::from(io::ErrorKind::PermissionDenied)),
     }
+}
+
+/// `FILE_ALL_ACCESS`: voller Zugriff, so steht `GA` aus der Vorlage nach dem Anlegen an der Pipe (SDDL `FA`).
+const FILE_ALL_ACCESS: u32 = 0x001F_01FF;
+
+/// Trägt die Beschreibung genau die Rechte aus `owner_only_sddl`? Besitzer `sid`, Zugriffsliste geschützt (ohne
+/// geerbte Regeln) und darin nur „voller Zugriff für `sid`“, ohne Schalter.
+fn owner_only(found: &acl::Security, sid: &str) -> bool {
+    let only = acl::Rule {
+        kind: acl::ACCESS_ALLOWED,
+        flags: 0,
+        mask: FILE_ALL_ACCESS,
+        sid: sid.to_owned(),
+    };
+    found.owner == sid
+        && found.dacl_flags == acl::DACL_PROTECTED
+        && found.rules.as_deref() == Some(std::slice::from_ref(&only))
 }
 
 /// Verbindet sich mit der Pipe, wenn der Server dem eigenen Benutzer gehört.
@@ -91,13 +111,17 @@ pub fn open_client_for(name: &str, expected: &str) -> io::Result<NamedPipeClient
 /// Besitzer des Pipe-Objekts hinter `pipe` (Client- oder Server-Seite). Ein anderes Konto ohne Adminrechte kann den
 /// Besitzer nicht auf eine fremde SID setzen; anders als die Prozess-ID hängt das nicht am Server-Prozess.
 pub fn pipe_owner_sid(pipe: &impl AsRawHandle) -> io::Result<String> {
-    let text = ffi::security_text(pipe, ffi::OWNER)?;
-    match text.strip_prefix("O:") {
-        Some(sid) if is_sid(sid) => Ok(sid.to_string()),
-        _ => Err(io::Error::from(io::ErrorKind::InvalidData)),
+    let owner = acl::of_object(pipe, ffi::OWNER)?.owner;
+    if is_sid(&owner) {
+        Ok(owner)
+    } else {
+        Err(io::Error::from(io::ErrorKind::InvalidData))
     }
 }
 
+#[cfg(test)]
+#[path = "pipe_acl_tests.rs"]
+mod acl_tests;
 #[cfg(test)]
 #[path = "pipe_tests.rs"]
 mod tests;

@@ -1,8 +1,8 @@
 //! Gehärtete Pipe der Einzelinstanz (Entscheid T4-7): Rechte nur für den eigenen Benutzer, keine Fernverbindung,
 //! Besitzerprüfung beim Verbinden. Jede Härtung hat eine Gegenprobe mit einer ungehärteten Pipe, damit der Test
 //! selbst beweist, dass er den Unterschied sieht. Jeder Test hat einen eigenen Pipe-Namen.
-use super::ffi::security_text;
 use super::probe::as_anonymous;
+use super::probe::security_text;
 use super::*;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -54,8 +54,9 @@ fn die_beschreibung_nennt_nur_den_eigenen_benutzer() {
 async fn die_pipe_erlaubt_nur_dem_eigenen_benutzer_zugriff() {
     let sid = user_sid().unwrap();
     let hard = create_server(&name("dacl"), true).unwrap();
-    let text = security_text(&hard, ffi::OWNER_AND_DACL).unwrap();
-    assert_eq!(text, format!("O:{sid}D:P(A;;FA;;;{sid})"));
+    // Über die SIDs, nicht über SDDL-Text: Der schreibt etwa das eingebaute Administratorkonto als „LA“ (pipe_acl).
+    let found = acl::of_object(&hard, ffi::OWNER_AND_DACL).unwrap();
+    assert!(owner_only(&found, &sid), "{found:?}");
     // Gegenprobe: Ohne eigene Beschreibung bekommt jeder (auch anonym) Lesezugriff.
     let plain = ServerOptions::new().create(name("dacl-plain")).unwrap();
     let open = security_text(&plain, ffi::OWNER_AND_DACL).unwrap();
