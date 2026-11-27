@@ -119,5 +119,7 @@ jobs:
           cargo install --locked cargo-audit --version 0.22.2
       - name: Abhängigkeiten abrufen (öffentliche Quellen, nach Cargo.lock)
         run: cargo fetch --locked
+      # Die Advisory-Datenbank vorher holen; `--offline` prüft sonst gegen eine fehlende Datenbank (fix-release-1).
+      - run: cargo deny --locked fetch db
       - run: cargo deny --locked --offline check advisories bans licenses sources
       - run: cargo audit --deny warnings
