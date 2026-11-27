@@ -1,16 +1,11 @@
-# Prüfung bei Push und Pull Request auf main (SICHERHEIT 6.2, wie in daedyx/core; Review T1a M-1).
-# Nur Lesen, Actions per voller Commit-ID, kein pull_request_target. Einziges Secret: DAEDYX_READ_TOKEN, ein Token mit
-# nur Lesezugriff auf die privaten Repositories daedyx/core und daedyx/ui (dasselbe in Desk und Tasks; hier wird nur
-# der Kern geholt). Nur in den Schritten, die abrufen; entfällt, sobald beide öffentlich sind. Bis dahin ist die CI rot,
-# wenn das Secret im Repo daedyx/ui fehlt (Bericht T1a, Nachtrag 2; Review T1b M-1).
+# Prüfung bei Push und Pull Request (SICHERHEIT 6.2, wie in daedyx/core; Review T1a M-1).
+# Nur Lesen, Actions per voller Commit-ID, kein pull_request_target, kein Secret: daedyx/core und daedyx/ui sind seit
+# 2026-11-27 öffentlich, der Abruf braucht kein Token mehr (A-018 entfällt, fix-release-1).
 name: ci
 
 on:
-  # Bis zum Öffentlichstellen eingeschränkt, danach wieder voll (Entscheid 2026-11-25): ohne DAEDYX_READ_TOKEN wäre
-  # jeder Lauf auf einem Arbeitszweig rot (Fehler-Mails, Windows-Minuten). Arbeitszweige prüft bis dahin der lokale
-  # Haken (.githooks/pre-commit) mit denselben Werkzeugen.
+  # Seit dem Öffentlichstellen wieder voll (Entscheid 2026-11-25): jeder Push, auch auf Arbeitszweigen.
   push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -76,19 +71,9 @@ jobs:
         run: |
           rustup toolchain install $env:RUST_VERSION --profile minimal --component clippy,rustfmt
           rustup default $env:RUST_VERSION
-      - name: Private Abhängigkeiten abrufen (daedyx/core, daedyx/ui; Token nur für diesen Schritt)
+      - name: Abhängigkeiten abrufen (öffentliche Quellen, nach Cargo.lock)
         shell: pwsh
-        env:
-          DAEDYX_READ_TOKEN: ${{ secrets.DAEDYX_READ_TOKEN }}
         run: |
-          if (-not $env:DAEDYX_READ_TOKEN) { throw "Secret DAEDYX_READ_TOKEN fehlt (nur Lesen, daedyx/core und daedyx/ui)" }
-          # Kein Anmeldespeicher: der Windows-Runner legte das Token sonst im Credential-Manager ab (Review T1a N2-1).
-          $env:GIT_CONFIG_COUNT = '2'
-          $env:GIT_CONFIG_KEY_0 = 'url.https://x-access-token:' + $env:DAEDYX_READ_TOKEN + '@github.com/daedyx/.insteadOf'
-          $env:GIT_CONFIG_VALUE_0 = 'https://github.com/daedyx/'
-          $env:GIT_CONFIG_KEY_1 = 'credential.helper'
-          $env:GIT_CONFIG_VALUE_1 = ''
-          $env:CARGO_NET_GIT_FETCH_WITH_CLI = 'true'
           cargo fetch --locked
           if ($LASTEXITCODE -ne 0) { throw "Abruf der Abhängigkeiten fehlgeschlagen" }
       # Das Prüfprogramm vor jedem anderen Code bauen und beiseitelegen.
@@ -132,14 +117,7 @@ jobs:
         run: |
           cargo install --locked cargo-deny --version 0.20.2
           cargo install --locked cargo-audit --version 0.22.2
-      - name: Private Abhängigkeiten abrufen (daedyx/core, daedyx/ui; Token nur für diesen Schritt)
-        env:
-          DAEDYX_READ_TOKEN: ${{ secrets.DAEDYX_READ_TOKEN }}
-        run: |
-          test -n "$DAEDYX_READ_TOKEN" || { echo "Secret DAEDYX_READ_TOKEN fehlt (nur Lesen, daedyx/core und daedyx/ui)"; exit 1; }
-          git config --global "url.https://x-access-token:${DAEDYX_READ_TOKEN}@github.com/daedyx/.insteadOf" https://github.com/daedyx/
-          # Kein Anmeldespeicher für das Token (Review T1a N2-1), wie im Windows-Schritt.
-          GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= CARGO_NET_GIT_FETCH_WITH_CLI=true cargo fetch --locked
-          git config --global --unset-all "url.https://x-access-token:${DAEDYX_READ_TOKEN}@github.com/daedyx/.insteadOf"
+      - name: Abhängigkeiten abrufen (öffentliche Quellen, nach Cargo.lock)
+        run: cargo fetch --locked
       - run: cargo deny --locked --offline check advisories bans licenses sources
       - run: cargo audit --deny warnings
