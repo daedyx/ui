@@ -88,10 +88,19 @@ fn private_networks_are_found_documentation_ranges_are_not() {
 }
 
 #[test]
-fn organisation_names_are_found_as_words() {
-    assert!(has_org_name(concat!("beim ", "M", "VX", " e.V.")));
-    assert!(has_org_name(concat!("Kreis-", "Muster", "wacht")));
-    assert!(!has_org_name("MVXS und AMVX sind andere Wörter"));
+fn short_listed_words_count_only_as_whole_words() {
+    // Erfundenes Kürzel: kurze Wörter (bis vier Zeichen) treffen sonst in Base64 oder längeren Wörtern.
+    let words = vec!["mvx".to_string()];
+    assert!(has_listed_word("beim MVX e.V.", &words));
+    assert!(has_listed_word("Kreis-MVX/Ortsgruppe", &words));
+    assert!(!has_listed_word("MVXS und AMVX sind andere Wörter", &words));
+    assert!(!has_listed_word("aGVsbG9tdnhxd2U=", &words));
+}
+
+#[test]
+fn long_listed_words_count_inside_longer_words() {
+    let words = vec!["musterwacht".to_string()];
+    assert!(has_listed_word("Kreis-Musterwachtgruppe", &words));
 }
 
 #[test]

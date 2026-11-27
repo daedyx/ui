@@ -166,17 +166,19 @@ pub fn has_private_ip(line: &str) -> bool {
         })
 }
 
-/// Namen echter Organisationen, die in kein Repository gehören.
-pub fn has_org_name(line: &str) -> bool {
-    let words = line.split(|c: char| !c.is_alphanumeric());
-    let org = concat!("M", "VX");
-    words.clone().any(|w| w == org) || line.to_lowercase().contains(concat!("muster", "wacht"))
-}
-
-/// Wörter aus der lokalen Wortliste (nie im Repository), ohne Groß-/Kleinschreibung.
+/// Wörter aus der lokalen Wortliste (nie im Repository), ohne Groß-/Kleinschreibung. Dort stehen auch die
+/// Namen echter Organisationen. Kurze Wörter (bis vier Zeichen, etwa Kürzel) zählen nur als ganzes Wort,
+/// sonst treffen sie zufällig in Base64 oder in längeren Wörtern.
 pub fn has_listed_word(line: &str, words: &[String]) -> bool {
     let lower = line.to_lowercase();
-    words.iter().any(|w| lower.contains(w.as_str()))
+    words.iter().any(|w| {
+        if w.chars().count() > 4 {
+            return lower.contains(w.as_str());
+        }
+        lower
+            .split(|c: char| !c.is_alphanumeric())
+            .any(|part| part == w)
+    })
 }
 
 #[cfg(test)]

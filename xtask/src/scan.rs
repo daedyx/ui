@@ -81,7 +81,6 @@ fn line_rules(line: &str, words: &[String], workflow: bool) -> Vec<&'static str>
         (patterns::has_real_mail(line), "mailadresse"),
         (patterns::has_user_path(line), "benutzerpfad"),
         (patterns::has_private_ip(line), "private-ip"),
-        (patterns::has_org_name(line), "organisation"),
         (patterns::has_listed_word(line, words), "lokale-wortliste"),
         (workflow && has_workflow_secret(line), "secret-im-workflow"),
     ];
