@@ -6,7 +6,7 @@
 23 unittests src/lib.rs (daedyx_sys)
 97 unittests src/lib.rs (daedyx_tasks_ui)
 66 unittests src/lib.rs (daedyx_ui)
-25 unittests src/lib.rs (daedyx_updater)
+26 unittests src/lib.rs (daedyx_updater)
 64 unittests src/main.rs (xtask)
 # U3 F-U3-1 (2026-11-26, Zweig paket-u3-net): daedyx_updater 29 -> 25, die vier Netz-Tests stehen jetzt mit net.rs im
 # Kern (daedyx-update, Merkmal net). Lockerung: Ja des Betreuers 2026-11-27.

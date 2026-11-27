@@ -117,6 +117,18 @@ fn setup_ohne_nachweis_wird_abgelehnt() {
     assert!(no_setup_left(&dir));
 }
 
+/// Review M-PS-1: Wer das Ergebnis der Suche sieht, findet die Sperre frei. Vorher gab der Ablauf sie erst nach dem
+/// letzten Status frei, und ein Test oder der Launcher bekam gelegentlich „läuft bereits“ (hier 2 von 16 Läufen).
+#[test]
+fn nach_der_suche_ist_die_sperre_schon_frei() {
+    let r = Release::new("0.2.1");
+    for n in 0..20 {
+        let (dir, _u) = offered(&format!("frei-{n}"), &r);
+        let lock = Lock::acquire(&daedyx_update::lock::shared_lock_dir(&dir.0), "probe");
+        assert!(lock.is_ok(), "Lauf {n}");
+    }
+}
+
 #[test]
 fn belegte_sperre_meldet_update_laeuft_bereits() {
     let r = Release::new("0.2.1");

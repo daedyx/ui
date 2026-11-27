@@ -16,14 +16,19 @@ impl Run<'_> {
             .map_err(|e| Status::Blocked(Blocked::from(e).kind))
     }
 
+    /// Die Sperre wird vor dem letzten Status freigegeben: Wer ihn sieht (Oberfläche, Launcher, Test), findet sie
+    /// frei (Review fix-pipe-sid, M-PS-1).
     pub(crate) fn check(&mut self) {
-        let Ok(_lock) = self.lock() else {
+        let Ok(lock) = self.lock() else {
             return self.status(Status::Busy);
         };
         self.status(Status::Checking);
         let provenance = match self.provenance() {
             Ok(p) => p,
-            Err(s) => return self.status(s),
+            Err(s) => {
+                drop(lock);
+                return self.status(s);
+            }
         };
         let seen = self.state.highest_seen();
         let outcome = check::check(
@@ -56,6 +61,7 @@ impl Run<'_> {
             }
             Outcome::Blocked(b) => Status::Blocked(b.kind),
         };
+        drop(lock);
         self.status(status);
     }
 
@@ -68,7 +74,10 @@ impl Run<'_> {
         };
         let provenance = match self.provenance() {
             Ok(p) => p,
-            Err(s) => return self.status(s),
+            Err(s) => {
+                drop(lock);
+                return self.status(s);
+            }
         };
         let free = (self.backend.free_space)(&self.config.update_dir_existing());
         let mut last = u64::MAX;
@@ -99,6 +108,7 @@ impl Run<'_> {
                 self.send(Msg::Ready(Box::new(prepared)));
             }
             Err(b) => {
+                drop(lock);
                 // Nicht vertrauenswürdig: Angebot verwerfen (nur eine neue Suche bringt ein neues).
                 if b.kind == BlockKind::NotTrusted {
                     self.offer = None;

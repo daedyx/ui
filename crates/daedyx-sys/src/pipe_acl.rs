@@ -147,11 +147,18 @@ fn rules(acl: *mut c_void) -> io::Result<Vec<Rule>> {
             mask: 0,
             sid: String::new(),
         };
-        // „Erlauben“: Kopf, Maske (4 Byte), dann die SID; nur, wenn die Regel dafür groß genug ist.
-        if kind == ACCESS_ALLOWED && u16::from_le_bytes([lo, hi]) >= 16 {
-            // SAFETY: Die Regel ist mindestens 16 Byte groß; die Maske liegt an Byte 4.
-            rule.mask = unsafe { ace.wrapping_add(4).cast::<u32>().read_unaligned() };
-            rule.sid = sid_text(ace.wrapping_add(8).cast())?;
+        // „Erlauben“: Kopf, Maske (4 Byte), dann die SID (Revision, Anzahl der Unterkennungen, 6 Byte Herkunft, je
+        // Unterkennung 4 Byte); nur, wenn die Regel dafür groß genug ist.
+        let size = usize::from(u16::from_le_bytes([lo, hi]));
+        if kind == ACCESS_ALLOWED && size >= 16 {
+            // SAFETY: Die Regel ist mindestens 16 Byte groß; Maske und SID-Anfang liegen in Byte 4 bis 11.
+            let body = unsafe { ace.wrapping_add(4).cast::<[u8; 8]>().read_unaligned() };
+            let [m0, m1, m2, m3, _revision, count, ..] = body;
+            // Die SID muss ganz in der Regel liegen (Review N-PS-1), sonst gilt die Regel als fremd.
+            if 16usize.saturating_add(usize::from(count).saturating_mul(4)) <= size {
+                rule.mask = u32::from_le_bytes([m0, m1, m2, m3]);
+                rule.sid = sid_text(ace.wrapping_add(8).cast())?;
+            }
         }
         out.push(rule);
     }
