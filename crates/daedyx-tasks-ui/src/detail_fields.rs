@@ -100,7 +100,7 @@ pub fn priority(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task) {
     let name = texts.t("aufgaben.feld.prioritaet");
     ui.label(eframe::egui::RichText::new(&name).small());
     named_scope(ui, "aufgaben_prioritaet", Role::RadioGroup, &name, |ui| {
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             for p in 0..=3u8 {
                 let label = texts.t(priority_key(p));
                 let on = t.priority == p;

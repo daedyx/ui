@@ -180,3 +180,5 @@ mod t3b_fix_tests;
 mod test_support;
 #[cfg(test)]
 mod tree_model_tests;
+#[cfg(test)]
+mod width_tests;

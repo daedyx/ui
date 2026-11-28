@@ -29,7 +29,7 @@ pub fn title(tasks: &TasksUi, texts: &Texts) -> String {
 pub fn header(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts) {
     let look = look_ui(ui);
     let name = title(tasks, texts);
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         let font = FontId::new(
             TOKENS.font.steps.emphasis.size,
             fonts::semibold_in(ui.ctx()),

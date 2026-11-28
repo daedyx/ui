@@ -37,7 +37,7 @@ fn list(ui: &mut Ui, tasks: &mut TasksUi, texts: &Texts, t: &Task, name: &str) {
     let current = tasks.draft.alarms.clone();
     named_scope(ui, "aufgaben_erinnerungen", Role::List, name, |ui| {
         for m in &current {
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
                 let text = label(texts, *m);
                 ui.label(&text);
                 let r = button(
